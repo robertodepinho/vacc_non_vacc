@@ -16,7 +16,9 @@ population_size = 1000
 #TO-DO: percentual vacinado do Brasil
 vacc_per_init = 30 #initial slider position for percentage of population vaccinated
 #TO-DO: Percentual real para vacina selecionada
-vacc_and_covid_prob = 0.35 #Only temporary number - Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
+vacc_and_covid_prob = 0.1 #Only temporary number - Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.  
+#refs: https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&smid=tw-nytimes
+point_size = 2
 ```
 
 ```{r data}
@@ -38,74 +40,109 @@ Cada elemento no gráfico abaixo representa uma pessoa. Todas elas foram exposta
 
 Usando o controle, você pode determinar quantas delas estão vacinadas.
 
+
+```{r plot_vacc_non_vacc, context="server"}
+output$plot_vacc_non_vacc <- renderPlot({
+  #TO-DO:Gráfico WAFFLE
+  vacc_per = input$vacc_per
+  population %>%
+    ggplot(aes(x=x, y=y, color = x > vacc_per)) +
+    geom_point(size = point_size) +
+    theme_minimal()
+  
+})
+```
 ```{r vacc_per_control, echo=FALSE}
 plotOutput("plot_vacc_non_vacc")
 sliderInput("vacc_per", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 
-```{r plot_vacc_non_vacc, context="server"}
-output$plot_vacc_non_vacc <- renderPlot({
-  #TO-DO:Gráfico WAFFLE
-  population %>%
-    ggplot(aes(x=x, y=y, color = x > input$vacc_per)) +
-    geom_point() 
-  
-})
-```
 
 <!-- #TO-DO:Texto explicando que mesmo com vacina pode covid -->
 Mesmo com vacina, pode ter covid..... 
 
+```{r plot_vacc_non_vacc_covid, context="server"}
+output$plot_vacc_non_vacc_covid <- renderPlot({
+  #TO-DO:Gráfico WAFFLE Padronizado
+  vacc_per = input$vacc_per
+  population %>%
+    mutate( sick = (x > vacc_per | covid_if_vacc)) %>%  #sick, if not vacc or if vacc but still in prob.
+    ggplot(aes(x=x, y=y, 
+               color = x > vacc_per, #color indicates vaccinated or not - change
+               alpha = sick)) +
+    geom_point(size = point_size) +
+    theme_minimal()
+})
+```
 ```{r vacc_non_vacc_covid, echo=FALSE}
 plotOutput("plot_vacc_non_vacc_covid")
 ```
 
-```{r plot_vacc_non_vacc_covid, context="server"}
-output$plot_vacc_non_vacc_covid <- renderPlot({
-  #TO-DO:Gráfico WAFFLE Padronizado
-  population %>%
-    mutate( sick = (x > input$vacc_per | covid_if_vacc)) %>%  #sick, if not vacc or if vacc but still in prob.
-    ggplot(aes(x=x, y=y, 
-               color = x > input$vacc_per, #color indicates vaccinated or not - change
-               shape = sick)) +
-    geom_point(size = 5) 
-})
-```
 
 <!-- #TO-DO:Texto Introdução gráfico só com os doentes -->
-Só os doentes
+Só os doentes / doentes "arrumados" - mostrar percentuais
 
-```{r covid_only, echo=FALSE}
-plotOutput("plot_covid_only")
-```
 
 ```{r plot_covid_only, context="server"}
 output$plot_covid_only <- renderPlot({
+  #TO-DO:Arrumar em barras
   #TO-DO:Gráfico WAFFLE Padronizado
+  vacc_per = input$vacc_per
   population %>%
-    mutate( sick = (x > input$vacc_per | covid_if_vacc)) %>% #sick, if not vacc or if vacc but still in prob.
+    mutate( sick = (x > vacc_per | covid_if_vacc)) %>% #sick, if not vacc or if vacc but still in prob.
     filter(sick) %>%
     ggplot(aes(x=x, y=y, 
-               color = x > input$vacc_per, #color indicates vaccinated or not - change
-               shape =  sick 
+               color = x > vacc_per #color indicates vaccinated or not - change
+                
     )) +
-    geom_point(size = 5) #TO-DO: adjust size? 
+    geom_point(size = point_size) + #TO-DO: adjust size? 
+    theme_minimal()
   
 })
+```
+```{r covid_only, echo=FALSE}
+plotOutput("plot_covid_only")
 ```
 
 
 # Código exemplo a partir daqui - apagar ao final
 
-```{r, echo=FALSE}
-sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30)
+
+TESTE de SLIDER DUPLICADO
+
+```{r synch test, echo=FALSE}
+sliderInput("bins_a", "Number of bins:", min = 1, max = 50, value = 30)
+sliderInput("bins_b", "Number of bins:", min = 1, max = 50, value = 30)
+sliderInput("bins_c", "Number of bins:", min = 1, max = 50, value = 30)
 plotOutput("distPlot")
 ```
 
 ```{r, context="server"}
+
+observeEvent(input$bins_a,{
+  if(input$bins_a !=input$bins_b)
+    updateSliderInput(inputId = "bins_b", value = input$bins_a)
+  if(input$bins_a !=input$bins_c)
+    updateSliderInput(inputId = "bins_c", value = input$bins_a)
+  })
+
+observeEvent(input$bins_b,{
+  if(input$bins_b !=input$bins_a)
+    updateSliderInput(inputId = "bins_a", value = input$bins_b)
+  if(input$bins_b !=input$bins_c)
+    updateSliderInput(inputId = "bins_c", value = input$bins_b)
+  })
+observeEvent(input$bins_c,{
+  if(input$bins_c !=input$bins_a)
+    updateSliderInput(inputId = "bins_a", value = input$bins_c)
+  if(input$bins_c !=input$bins_b)
+    updateSliderInput(inputId = "bins_b", value = input$bins_c)
+  })
+
+
 output$distPlot <- renderPlot({
   x <- faithful[, 2]  # Old Faithful Geyser data
-  bins <- seq(min(x), max(x), length.out = input$bins + 1)
+  bins <- seq(min(x), max(x), length.out = input$bins_a + 1)
   hist(x, breaks = bins, col = 'darkgray', border = 'white')
 })
 ```
