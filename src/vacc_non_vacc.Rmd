@@ -4,6 +4,8 @@ output: learnr::tutorial
 runtime: shiny_prerendered
 ---
 
+<!-- A fazer: marcados com TO-DO -->
+
 ```{r setup, include=FALSE}
 library(learnr)
 library(tidyverse)
@@ -11,29 +13,39 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 ```{r general_parameters}
 population_size = 1000
-vacc_per_init = 30
+#TO-DO: percentual vacinado do Brasil
+vacc_per_init = 30 #initial slider position for percentage of population vaccinated
+#TO-DO: Percentual real para vacina selecionada
+vacc_and_covid_prob = 0.35 #Only temporary number - Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
 ```
 
 ```{r data}
 population = tibble(x = runif(population_size)*100, 
-                    y = runif(population_size)*100)
+                    y = runif(population_size)*100,
+                    covid_if_vacc = sample(x = c(TRUE,FALSE),
+                                           replace = TRUE,
+                                           size = population_size,
+                                           prob = c(vacc_and_covid_prob,1-vacc_and_covid_prob)
+                    )
+)
 ```
 
 
 
 ## Com vacina, sem vacina e covid-19
 
-Cada elemento no gráfico abaixo representa uma pessoa. Todas elas foram expostas ao vírus tempo suficiente para se infertar caso não tenham tomado a vacina.
+Cada elemento no gráfico abaixo representa uma pessoa. Todas elas foram expostas ao vírus tempo suficiente para se infectar caso não tenham tomado a vacina.
 
 Usando o controle, você pode determinar quantas delas estão vacinadas.
 
 ```{r vacc_per_control, echo=FALSE}
-sliderInput("vacc_per", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 plotOutput("plot_vacc_non_vacc")
+sliderInput("vacc_per", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 
 ```{r plot_vacc_non_vacc, context="server"}
 output$plot_vacc_non_vacc <- renderPlot({
+  #TO-DO:Gráfico WAFFLE
   population %>%
     ggplot(aes(x=x, y=y, color = x > input$vacc_per)) +
     geom_point() 
@@ -41,21 +53,47 @@ output$plot_vacc_non_vacc <- renderPlot({
 })
 ```
 
-Teste de segundo gráfico com mesmo input
+<!-- #TO-DO:Texto explicando que mesmo com vacina pode covid -->
+Mesmo com vacina, pode ter covid..... 
 
-```{r plot2, echo=FALSE}
-plotOutput("plot_vacc_non_vacc_2")
+```{r vacc_non_vacc_covid, echo=FALSE}
+plotOutput("plot_vacc_non_vacc_covid")
 ```
 
-
-```{r plot_vacc_non_vacc_2, context="server"}
-output$plot_vacc_non_vacc_2 <- renderPlot({
+```{r plot_vacc_non_vacc_covid, context="server"}
+output$plot_vacc_non_vacc_covid <- renderPlot({
+  #TO-DO:Gráfico WAFFLE Padronizado
   population %>%
-    ggplot(aes(x=x, y=y, color = x > input$vacc_per)) +
-    geom_point() 
+    mutate( sick = (x > input$vacc_per | covid_if_vacc)) %>%  #sick, if not vacc or if vacc but still in prob.
+    ggplot(aes(x=x, y=y, 
+               color = x > input$vacc_per, #color indicates vaccinated or not - change
+               shape = sick)) +
+    geom_point(size = 5) 
+})
+```
+
+<!-- #TO-DO:Texto Introdução gráfico só com os doentes -->
+Só os doentes
+
+```{r covid_only, echo=FALSE}
+plotOutput("plot_covid_only")
+```
+
+```{r plot_covid_only, context="server"}
+output$plot_covid_only <- renderPlot({
+  #TO-DO:Gráfico WAFFLE Padronizado
+  population %>%
+    mutate( sick = (x > input$vacc_per | covid_if_vacc)) %>% #sick, if not vacc or if vacc but still in prob.
+    filter(sick) %>%
+    ggplot(aes(x=x, y=y, 
+               color = x > input$vacc_per, #color indicates vaccinated or not - change
+               shape =  sick 
+    )) +
+    geom_point(size = 5) #TO-DO: adjust size? 
   
 })
 ```
+
 
 # Código exemplo a partir daqui - apagar ao final
 
