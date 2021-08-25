@@ -2,9 +2,9 @@
 
 To do list:
 
-OK - 
 
-- [ ] Criar um repositório no github/gitlab
+
+- [X] Criar um repositório no github/gitlab
 
 - [ ] Obter parâmetros publicados das vacinas para simulações 
 
@@ -16,3 +16,4 @@ OK -
     - [ ] c.2 separar em páginas
     - [ ] c.3 mover código e funções para scripts proprios
     - [ ] c.4 duplicatas dos sliders
+- [ ] Redação dos textos
