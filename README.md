@@ -15,5 +15,5 @@ To do list:
     - [ ] c.1 criar waffle chart padrão
     - [ ] c.2 separar em páginas
     - [ ] c.3 mover código e funções para scripts proprios
-    - [ ] c.4 duplicatas dos sliders
+    - [X] c.4 duplicatas dos sliders
 - [ ] Redação dos textos
