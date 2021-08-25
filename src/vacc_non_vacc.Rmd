@@ -1,18 +1,76 @@
 ---
-title: "Tutorial"
+title: "Por que vemos pessoas vacinadas com covid-19?"
 output: learnr::tutorial
 runtime: shiny_prerendered
 ---
 
 ```{r setup, include=FALSE}
 library(learnr)
+library(tidyverse)
 knitr::opts_chunk$set(echo = FALSE)
+```
+```{r general_parameters}
+population_size = 1000
+vacc_per_init = 30
+```
+
+```{r data}
+population = tibble(x = runif(population_size)*100, 
+                    y = runif(population_size)*100)
 ```
 
 
-## Topic 1
 
-### Exercise 
+## Com vacina, sem vacina e covid-19
+
+Cada elemento no gráfico abaixo representa uma pessoa. Todas elas foram expostas ao vírus tempo suficiente para se infertar caso não tenham tomado a vacina.
+
+Usando o controle, você pode determinar quantas delas estão vacinadas.
+
+```{r vacc_per_control, echo=FALSE}
+sliderInput("vacc_per", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
+plotOutput("plot_vacc_non_vacc")
+```
+
+```{r plot_vacc_non_vacc, context="server"}
+output$plot_vacc_non_vacc <- renderPlot({
+  population %>%
+    ggplot(aes(x=x, y=y, color = x > input$vacc_per)) +
+    geom_point() 
+  
+})
+```
+
+Teste de segundo gráfico com mesmo input
+
+```{r plot2, echo=FALSE}
+plotOutput("plot_vacc_non_vacc_2")
+```
+
+
+```{r plot_vacc_non_vacc_2, context="server"}
+output$plot_vacc_non_vacc_2 <- renderPlot({
+  population %>%
+    ggplot(aes(x=x, y=y, color = x > input$vacc_per)) +
+    geom_point() 
+  
+})
+```
+
+# Código exemplo a partir daqui - apagar ao final
+
+```{r, echo=FALSE}
+sliderInput("bins", "Number of bins:", min = 1, max = 50, value = 30)
+plotOutput("distPlot")
+```
+
+```{r, context="server"}
+output$distPlot <- renderPlot({
+  x <- faithful[, 2]  # Old Faithful Geyser data
+  bins <- seq(min(x), max(x), length.out = input$bins + 1)
+  hist(x, breaks = bins, col = 'darkgray', border = 'white')
+})
+```
 
 *Here's a simple exercise with an empty code chunk provided for entering the answer.*
 
@@ -59,16 +117,16 @@ Some questions to verify that you understand the purposes of various base and re
 ```{r quiz}
 quiz(
   question("Which package contains functions for installing other R packages?",
-    answer("base"),
-    answer("tools"),
-    answer("utils", correct = TRUE),
-    answer("codetools")
+           answer("base"),
+           answer("tools"),
+           answer("utils", correct = TRUE),
+           answer("codetools")
   ),
   question("Which of the R packages listed below are used to create plots?",
-    answer("lattice", correct = TRUE),
-    answer("tools"),
-    answer("stats"),
-    answer("grid", correct = TRUE)
+           answer("lattice", correct = TRUE),
+           answer("tools"),
+           answer("stats"),
+           answer("grid", correct = TRUE)
   )
 )
 ```
