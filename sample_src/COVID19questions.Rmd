@@ -1,0 +1,545 @@
+---
+title: "Growth, correlation, and causation"
+output:
+  learnr::tutorial:
+    version: 0.5
+    progressive: true
+    allow_skip: true
+runtime: shiny_prerendered
+description: >
+  Exploit COVID-19 for graph interpretation
+---
+
+```{r setup, include=FALSE}
+library(learnr)
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## <!-- makes a new page, without a header or index entry -->
+
+```{r, echo=FALSE, messages=FALSE}
+NSW<- readRDS(file="images/NSWcases.Rda")
+```
+
+The following plot shows the number of confirmed cases of COVID-19 infection in the state of New South Wales in Australia, for each day during a period beginning the 4th of March, 2020.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = ""}
+require(ggplot2)
+library(scales)
+NSWcor<-cor.test(as.numeric(NSW$date),NSW$cases) 
+g<-ggplot( data = NSW, aes( date, cases )) + geom_point() + theme_bw() + ylab("Confirmed cases in NSW") + 
+  scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b")) + ylim(0,NA)
+show(g)
+```
+
+
+##
+
+Linear regression is often used to predict one variable based on another, but it assumes the overall shape of the data is a straight line (plus or minus some random variability). 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = "" }
+g<-ggplot( data = NSW, aes( date, cases )) + geom_point() + theme_bw() + ylab("Confirmed cases in NSW") + 
+  scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b")) +
+  geom_smooth(method='lm', fill=NA, color="darkred") +  ylim(0,NA) #+
+  #annotate("text",x=as.Date("2020/3/7"),y=100, label=paste0("r=",round(NSWcor$estimate,2)), parse=FALSE) 
+show(g)
+```
+
+The line that best fits the data is shown above in dark red. The fit is not good! The relationship between number of cases and days is **nonlinear** - they do not fall on a straight line. 
+
+
+```{r slope1}
+question("What would a perfectly straight line on this plot indicate?",
+    answer("The doubling time of the number of confirmed cases is constant.", message="No, that would be an exponential growth rather than linear."),
+    answer("Each day, the number of confirmed cases increases by a constant percentage.", message="No, that would be an exponential growth rather than linear."),
+    answer("Each day, the number of confirmed cases increases by the same amount as the previous day.", correct=TRUE),
+    allow_retry = TRUE
+)
+```
+
+
+Next, let's consider the shape of the data more closely.
+
+##
+
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = ""}
+require(ggplot2)
+NSWcor<-cor.test(as.numeric(NSW$date),NSW$cases) 
+g<-ggplot( data = NSW, aes( date, cases )) + geom_point() + theme_bw() + ylab("Confirmed cases in NSW") +
+  scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b")) + ylim(0,NA)
+show(g)
+```
+
+```{r}
+endDate<- "2020/4/08" #to avoid vertical axis going too high with the growth ones
+```
+
+```{r slope2}
+question("Between 9 March and 23 March, what was the pattern for the increase in cases? ",
+    answer("The cases increased steadily, at a constant rate.", message="No, that would only be true if the cases fell on a straight line."),
+    answer("Quicker at the end of that period than at the beginning.", correct=TRUE),
+    answer("Each day, the number of cases decreased by a constant percentage.", message="No, they certainly did not decrease."),
+    #answer("They accelerated.", correct=TRUE),
+    allow_retry = TRUE
+)
+```
+
+## <!--Exponential comparison-->
+
+Below, some blue dots have been added to the plot. Also, the vertical axis has been rescaled to accommodate how high the blue dots go.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = "" }
+start<-22; pctIncrease<-20
+NSW$exponential<-22
+for(i in 2:length(NSW$date)) {
+  NSW$exponential[i] <- NSW$exponential[i-1]*(1+pctIncrease/100)
+}
+h<-ggplot( data = NSW, aes( date, cases )) + geom_point() + theme_bw() + ylab("Confirmed cases in NSW") + 
+  ylim(0,15000) + xlim(as.Date(c(NA, endDate))) +
+  scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b")) +
+  geom_point(data = NSW, aes(x = date, y = exponential+100), color = "blue", alpha=.6) +
+  annotate("text",x=as.Date("2020/4/01"),y=5200, label="20% daily growth", color="blue", size=3.5, angle=66)
+show(h)
+```
+
+If the number of cases had increased by 20% each day, then the black dots (the real data) would fall exactly on top of the blue dots. In other words, the blue dots show the number of cases that would have occurred if there had been a 20% increase in cases each day.
+
+For the blue dots, the increase in cases is greater for successive days. This is because 20% of a larger number is greater than that of a smaller number. For example, when 10 people are infected, a 20% increase means there will be 2 more cases the next day, yielding 12 cases in total. The second day will yield approximately 2 more cases, yielding 14. After a few days, 20% growth will yield 3 more cases. But as the total grows, 20% will correspond to more and more new daily cases. For example, 20% of 50 is 10 more cases.
+
+As a result, the graph becomes steeper and steeper as the number of cases grows.
+
+This is the classic pandemic nightmare, where a steady percentage increase causes a disease to quickly get out of control.
+
+```{r relativeToExponential}
+question("What does the 20% comparison (the blue dots) indicate about the real data?",
+    answer("The real cases increased steadily, at a constant rate."),
+    answer("The real cases increased much more slowly than 20%/day at first, but from then on increased at a constant rate."),
+    answer("The real cases increased at a faster than 20%/day rate"),
+    answer("The real cases increased at close to 20% per day at first, but later increased more slowly.", correct=TRUE),
+    allow_retry = TRUE
+)
+```
+
+If the number of cases does grow by the same percentage each day, this is referred to as "exponential growth". Each person infected may pass the infection on to a certain number of others.
+
+This means that the change in a day's cases reflects the number who are already infected, yielding a percentage increase each day rather than a constant increase in cases each day.
+
+Near the beginning when only a few people are infected (here, early March), the number of cases remains pretty low, because a 20% increase does not mean a lot more cases. 
+
+## Exponential growth
+
+As was just described, "exponential growth" refers to when something increases by the same percentage over successive time points, such as a 20% increase per day.
+
+We will now replot the previous data with the vertical axis as a **percent increase** over the previous day rather than the total number of cases we were using before. 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = ""}
+#Calculate proportional increase
+increase<-diff(NSW$cases)
+increase<-c(0,increase) #pad with 0 for first item
+NSW$increase <- increase
+
+NSW$increaseE <- pctIncrease #Because manual gets it slightly wrong probably because wrong starting date or something
+
+#increaseE<-diff(NSW$exponential)
+#increaseE<-c(0,increaseE) #pad with 0 for first item
+#NSW$increaseE <- increaseE
+excludeFirst <- tail(NSW,-1)
+
+j<-ggplot( data = excludeFirst, aes( date, 100*increase/cases )) + geom_point() + theme_bw() + ylab("% increase in NSW confirmed cases") +   scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b")) +
+  ylim(0,40) +
+    geom_point(data = excludeFirst, aes(x = date, y = increaseE), color = "blue", alpha=.6)
+show(j)
+```
+
+Because the blue data points were created by calculating a 20% increase compared to the previous day, they are constant on this plot that uses % increase as the vertical axis.
+<!-- The reason that virus infections can grow in this fashion is that each new person infected contributes an additional number of cases to the next day, by passing the virus on to others. Thus the new number of cases is some multiple (percentage added to) of the previous day's cases. -->
+
+For the real data (the black dots), this graph makes clear that after about 23 March 2020 (soon after flights from overseas were greatly reduced and social distancing began), no longer was there a similar percentage increase on each day. The percentage increase began to dwindle each day.
+
+##
+The below plot shows again, for each day, the percentage increase in cases from the previous day.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = "" }
+
+NSWcori<-cor.test(as.numeric(NSW$date),NSW$increase/NSW$cases) 
+h<-ggplot( data = excludeFirst, aes( date, 100*increase/cases )) + geom_point() + theme_bw() + ylab("Percent increase in NSW confirmed cases") + scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b"))
+show(h)
+```
+
+```{r pctage}
+question("If the number of cases grew exactly exponentially, where would the datapoints be?",
+    answer("On an accelerating curve.", message="That would be true if the vertical axis was number of cases, but not true with this percentage increase vertical axis."),
+    answer("On a straight line with an upward slope."),
+    answer("On a straight line with a downward slope."),
+    answer("A flat horizontal line.", correct=TRUE),
+    allow_retry = TRUE
+)
+```
+
+## A logarithmic vertical axis
+
+While the % increase vertical axis is useful, it unfortunately does not show the total number of cases. Instead, it only shows the change since the previous day. That means we can't see how high the caseload has gotten. This is one reason that people often use a **logarithmic** vertical axis in situations of constant (or even approximate) percentage growth.
+
+For the non-logarithmic vertical axis you are used to, a constant increase in *number* (not percentage) of cases each day results in a straight line. The greater the daily increase, the steeper the slope of the line. In other words, a constant daily addition results in a constant slope on a graph.
+
+When growth is exponential, we are interested in knowing what the number of cases is being *multiplied by* each day, not how much is being added to it. In the case of 20% growth, for instance, on each day the number of cases is the previous number plus 20%, which can be calculated by multiplying the previous day's number of cases by 1.2.
+
+Logarithms turn multiplication into addition, which means that on a logarithmic axis, stepping upward by a constant amount does not mean the number of cases has increased by the same number each time, but rather that it's been multiplied by the same number each time.
+
+```{r, semilogTwenty, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = "" }
+k<-ggplot( data = NSW, aes( date, exponential )) + geom_point(color="blue",alpha=.6) + theme_bw() + ylab("Confirmed cases in NSW") +
+  scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b")) + 
+  ylim(0,NA) +  theme(panel.grid.minor.y = element_blank()) +
+    annotate("text",x=as.Date("2020/3/15"),y=112, label="20% growth daily", color="blue", size=3, angle=44)
+show(k + scale_y_log10() )
+```
+
+Our 20% growth points now fall on a straight line, because each successive point is a result of multiplying (rather than adding) by a constant, just like the vertical axis.
+
+Indeed, notice that the vertical axis labels do not mark out equal intervals. That is, taking equal steps up does not result in adding one number over and over, a number corresponding to the step size. Rather, taking equal steps upward corresponds to *multiplying* by a number that reflects the step size. Notice the interval between the successive y-axis labels, for example - it is the previous label multipled by ten.
+
+##
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = "" }
+start<-22; pctIncrease<-30
+NSW$thirty<-22
+for(i in 2:length(NSW$date)) {
+  NSW$thirty[i] <- NSW$thirty[i-1]*(1+pctIncrease/100)
+}
+start<-22; pctIncrease<-10
+NSW$ten<-22
+for(i in 2:length(NSW$date)) {
+  NSW$ten[i] <- NSW$ten[i-1]*(1+pctIncrease/100)
+}
+require(scales)
+mm<-ggplot( data = NSW, aes( date, exponential )) + geom_point(color="blue") + theme_bw() + ylab("Confirmed cases in NSW") + scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b")) + ylim(0,NA) + 
+  geom_point(aes(x = date, y = thirty), color = "red", alpha=.6) + 
+  geom_point(aes(x = date, y = ten), color = "darkgreen", alpha=.6) + 
+  theme(panel.grid.minor.y = element_blank()) +
+  scale_y_continuous(trans="log", labels = scales::comma, breaks = c(100,1000,10000,100000,1000000)) +  #comma stops scientific notation
+  #                     function(x) format(x, big.mark = ",")) +
+  annotate("text",x=as.Date("2020/3/13"),y=38, label="10% daily growth", color="darkgreen", size=3, angle=18) +
+  annotate("text",x=as.Date("2020/3/15"),y=112, label="20% daily growth", color="blue", size=3, angle=32) +
+  annotate("text",x=as.Date("2020/3/16"),y=370, label="30% daily growth", color="red", size=3, angle=42)
+show(mm) 
+```
+
+The above plot shows that with a logarithmic vertical axis, any daily growth rate (multiplication by a particular factor) results in a straight line of corresponding slope. 
+
+Notice how for the highest growth rate of 30%, the disease infects over 100,000 people in just five weeks! we are lucky that NSW
+
+##
+
+Plotting the actual data from NSW (black dots), thanks to the  blue dots comparison, we can see that it was growing exponentially at nearly 20% for some time. 
+
+After 28 March, growth was slower - the data after that date no longer increase as steeply as the blue 20% growth dots.
+
+```{r, semilogboth, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = "" }
+h<-ggplot( data = NSW, aes( date, cases )) + geom_point() + theme_bw() + ylab("Confirmed cases in NSW") + 
+  scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b"))  + ylim(0,NA) + 
+    annotate("text",x=as.Date("2020/3/15"),y=250, label="20% daily growth", color="blue", size=3, angle=45) +
+  geom_point(data = NSW, aes(x = date, y = exponential), color = "blue", alpha=.6) +
+  #  geom_point(aes(x = date, y = thirty), color = "red", alpha=.6) + 
+   # geom_point(aes(x = date, y = ten), color = "darkgreen", alpha=.6) + 
+  scale_y_log10()
+show(h)
+```
+
+##
+
+Exponential growth of a disease is bad, but such growth of certain other things is not. Financial investments can yield exponential growth, because the value of many increases by some percentage yearly. For example, the U.S. stock market increased on average 14% a year between 2000 and the end of 2019. If your parents had invested \$2000 for you in the year 2000, at the beginning of 2020 it would have been worth about \$27,000. 
+
+```{r, compounding, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = "" }
+stocks<-data.frame(
+   date = seq(from = as.Date("2000/1/1"), to = as.Date("2020/1/1"), by = "year") )
+stocks$val <- 2000
+pctIncreaseStocks<- 14
+for(i in 2:length(stocks$val)) {
+  stocks$val[i] <- stocks$val[i-1]*(1+pctIncreaseStocks/100)
+}
+ss<-ggplot( data = stocks, aes( date, val )) + geom_point() + theme_bw() + ylab("Value ($)") 
+show(ss)
+```
+
+One way to summarise what a particular growth rate means is to consider that each growth rate corresponds to a doubling every time a particular number of days elapses. The 14% growth rate of the stock market during the first twenty years of this century, for example, meant a doubling approximately every five years. Here I've labelled the 10, 20, and 30 percent growths with their doubling times.
+
+```{r, doubleTimes, echo=FALSE, message=FALSE, warning=FALSE, fig.height=4, fig.width=4,  fig.cap = "" }
+#1.20^(seq(1,8)) #Calculate doubling
+#Calculate doubling time with 2=rate^doublingDays.   doublingDays = 2^(1/rate)
+
+mm<-ggplot( data = NSW, aes( date, exponential )) + geom_point(color="blue") + theme_bw() + ylab("Confirmed cases in NSW") + scale_x_date(date_minor_breaks=("1 days"), date_breaks=("7 days"), labels = date_format("%d %b")) + ylim(0,NA) + 
+  geom_point(aes(x = date, y = thirty), color = "red", alpha=.6) + 
+  geom_point(aes(x = date, y = ten), color = "darkgreen", alpha=.6) + 
+  theme(panel.grid.minor.y = element_blank()) +scale_y_log10() +
+  scale_y_continuous(trans="log", labels = scales::comma, breaks = c(100,1000,10000,100000,1000000)) +  #comma stops scientific notation
+  annotate("text",x=as.Date("2020/3/18"),y=50, label="10% daily growth, doubling about every 8 days", color="darkgreen", size=3, angle=17) +annotate("text",x=as.Date("2020/3/21"),y=290, label="20% daily growth, doubling about every 4 days", color="blue", size=3, angle=33) + 
+  annotate("text",x=as.Date("2020/3/22"),y=1800, label="30% daily growth, doubling about every 3 days", color="red", size=3, angle=42)
+show(mm)
+```
+
+Another way to think about a logarithmic axis is that going up a particular distance corresponds to multiplying by a particular factor.
+
+## Population density and flu mortality
+
+[Hoffman & Cox](https://bioone.org/journals/Transactions-of-the-Kansas-Academy-of-Science/volume-122/issue-3-4/062.122.0301/The-1918-1920-H1N1-Influenza-a-Pandemic-in-Kansas-and/10.1660/062.122.0301.full?casa_token=TtDsr1exh58AAAAA%3apcP2D8e87Ap0vYATPNofQCiq8zgIp8b0MKMHjn_awr9KMYZ7Mc65AKRiwnFi6aZrro9m6xvGYQDG) collected data regarding the flu pandemic that swept the world in 1918. Their plot, below, shows the mortality rate against the population density, with one data point for each county in Kansas and Missouri.
+
+```{r, echo=FALSE, out.width = "400px"}
+knitr::include_graphics("images/log1918MortalityKansasVsLogPopDensity.png")
+``` 
+
+Not only is the vertical axis logarithmic on this plot, but also the horizontal axis is logarithmic. But you don't need to worry about that to answer the following.
+
+```{r KansasMissouriCorrelatn}
+question("From this plot, what do you think is the relationship between population density and mortality rate?",
+    answer("No relationship", ), 
+    answer("Positive correlation", correct=TRUE),
+    answer("Negative correlation"),
+    allow_retry = TRUE
+)
+```
+
+### Causation
+
+From correlations, people often draw conclusions regarding causal relationships between the variables involved - in this case, between the population density and the mortality rate.
+
+```{r KansasMissouriCausation}
+question("What causal statement would people suspect to be true from the data in this plot?",
+    answer("A dense population causes higher flu mortality", correct=TRUE), 
+    answer("A sparse population causes higher flu mortality"),
+    answer("Flu mortality prevents dense populations"),
+    allow_retry = TRUE
+)
+```
+
+## Inferring causation
+
+```{r, echo=FALSE, out.width = "400px"}
+knitr::include_graphics("images/log1918MortalityKansasVsLogPopDensity.png")
+``` 
+
+The causal inference people tend to draw from a positive correlation of X with Y is that X causes Y.
+In this case, that would be that a dense population causes higher flu mortality.
+
+The correlation of Y with X and X with Y are the same. This means there is no mathematical reason to conclude that X causes Y rather than that Y causes X.
+
+However, in cases such as this one, a causal link is more plausible in one direction than in another. For example, it is plausible that higher population density causes a higher rate of flu deaths. A more detailed causal model might be that population density causes more frequent physical contact between people, which causes flu transmission, which results in deaths.
+
+But could Y cause X? That is, could flu deaths cause higher population density? That's not very plausible, illustrating that with some pairs of variables, causation in only one of the directions is likely.
+
+Don't forget that there is also the possibility that a third variable, Z, causes X and Y. For example, high-density places (cities) tend to grow up around natural transport hubs such as ports, rivers, or crossroads. If diseases tend to originate somewhere else, they will often start in a particular region with people arriving at an airport or train station, and have a greater chance to spread in the surrounding area before countermeasures are taken. Thus, the third variable of transport hubs may cause both the higher population density and the greater disease mortality.
+
+## Many points means more evidence
+
+```{r, echo=FALSE, out.width = "400px"}
+knitr::include_graphics("images/log1918MortalityKansasVsLogPopDensity.png")
+``` 
+
+Ideally, a scatterplot will have lots of data points.  If those points show a consistent pattern of Y increasing or decreasing with X, this provides a lot of evidence for a correlation, rather than the pattern being a result of random chance. It is a good idea to assess how strong a correlation is before considering whether it may be driven by a causal relationship.
+
+## A plot from the news media
+
+This plot was produced by John Burn-Murdoch of the Financial Times.
+
+```{r, echo=FALSE, out.width = "750px"}
+knitr::include_graphics("images/30MarCovid19CasesFT.png") #You can't change the image directory for Shiny apps
+
+#Calculate rate for a particular doubling time
+#2 = rate^doublingTime
+#rate = 2^(1/doublingTime)
+``` 
+
+Notice that it has a logarithmic vertical axis, so going up a particular distance corresponds to multiplying by a particular factor. One feature you haven't seen before, perhaps, is that the axis labels are *not* at equal multiplicative intervals. They have been positioned at round numbers.
+
+```{r us}
+question("Consider the U.S. data (one of the upper curves). For the first fifteen days or so after its 100th case, how fast were the number of confirmed cases growing?",
+    answer("Exponentially, doubling about every 2 days.", correct=TRUE),
+    answer("Linearly, doubling about every 2 days."),
+    answer("Linearly, increasing by the same number of cases each day, on average."),
+    allow_retry = TRUE
+)
+```
+
+##
+```{r, echo=FALSE, out.width = "750px"}
+knitr::include_graphics("images/30MarCovid19CasesFT.png") #You can't change the image directory for Shiny apps
+
+#Calculate rate for a particular doubling time
+#2 = rate^doublingTime
+#rate = 2^(1/doublingTime)
+USrate = round( (2^(1/2)  -1) * 100  )
+``` 
+
+A doubling of cases every two days, as occurred in the U.S. for the first two weeks here, corresponds to a `r USrate`% daily growth rate.
+
+##
+
+```{r, echo=FALSE, fig.cap="https://twitter.com/jperla/status/1243349875015553024", out.width = "750px"}
+knitr::include_graphics("images/masksNoMasksExplainsIt.png") #You can't change the image directory for Shiny apps
+``` 
+
+Here is another version of the graphic. Someone on twitter has scrawled something on it.
+
+```{r ideaimage}
+question("What theory do you think the person who scrawled on this image wished to encourage you to believe?",
+    answer("COVID-19 cases encourage mask wearing."),
+    answer("Wearing a mask slows the rate of infections.", correct = TRUE),
+    allow_retry = TRUE
+)
+#    answer("Masks prevent COVID-19 cases from growing exponentially.",message="No, because the lines in the Masks group are fairly linear on this semi-log plot, indicating that they are growing exponentially, just slower than the masks ones"),
+```
+
+## Causal inference
+
+Causal inference refers to using evidene to arrive at a conclusion about how things are causally related.
+
+```{r, echo=FALSE, fig.cap="https://twitter.com/jperla/status/1243349875015553024", out.width = "750px"}
+knitr::include_graphics("images/masksNoMasksExplainsIt.png") #You can't change the image directory
+``` 
+
+```{r ideaimage3}
+question("'Wearing a mask slows the rate of infection' is an example of:",
+    answer("An inescapable conclusion."),
+    answer("A correlational statement."),
+    answer("A causal statement.", correct = TRUE),
+    answer("An independently variable statement.", message= "This sentence doesn't mean anything, as far as I know."),
+    allow_retry = TRUE
+)
+```
+
+## 
+
+```{r, echo=FALSE, fig.cap="https://twitter.com/jperla/status/1243349875015553024", out.width = "750px"}
+knitr::include_graphics("images/masksNoMasksExplainsIt.png") #You can't change the image directory
+``` 
+
+The person who scrawled on this figure is encouraging people to make the causal inference that wearing a mask reduces the spread of COVID-19 infection. Let's consider how good the evidence is for this causal inference.
+
+```{r ideaimage2}
+question("How many countries with a high rate of mask wearing is the causal inference based on?",
+    answer("1."),
+    answer("2."),
+    answer("3."),
+    answer("4.", correct=TRUE),
+    answer("5."),
+    allow_retry = TRUE
+)
+```
+
+In order to be confident that a statistical correlation is present between two things, many data points are usually needed. After establishing a statistically significant correlation, some people make the further leap to a causal model.
+
+But one should keep in mind the difficulties in inferring causation from correlation. In particular, any correlation between two variables X and Y could be a result of X causing Y, Y causing X, or a third factor causing both X and Y.
+
+```{r ianotherFactor}
+question("What are two problems with inferring that X causes Y from a correlation between an X and Y variable? (choose all options that are correct)",
+    answer("A third factor may cause both of the variables that are correlated.",correct=TRUE),
+    answer("Y may cause X.", correct=TRUE),
+    answer("It should never be done from observational data - an actual experiment must be conducted.", message="This option makes no sense in this context."),
+    allow_retry = TRUE
+)
+```
+
+## 
+
+```{r, echo=FALSE, fig.cap="https://twitter.com/jperla/status/1243349875015553024", out.width = "750px"}
+knitr::include_graphics("images/masksNoMasksExplainsIt.png") #You can't change the image directory
+``` 
+
+Here, the person who scrawled on the plot is suggesting that there is a correlation between whether people in a country wear masks and the number of COVID cases. Unfortunately, the person did not calculate the size of the correlation (e.g., **r**), but to be generous, let's assume that there is a sizable correlation that is statistically significant.
+
+The plot highlights that a difference betweeen the countries with lots of cases and those with fewer may be how much people there wear masks. It is critical, however to consider the other differences between these groups of countries. Countries differ in so many ways that there are bound to be such differences. 
+
+Any of the below factors are likely to differ somewhat between the two groups of countries, and contribute to a difference in COVID cases:
+
+* Climate
+* Handshaking customs
+* Amount of COVID testing and tracing of contacts
+* Responsiveness of population to government recommendations
+* Existence of and severity of quarantine
+
+Such factors are sometimes called "third variables" because they are in addition to the two variables (mask wearing and number of cases) that were focused on. Because third variables exist, it is highly premature to conclude from a plot like this that masks are the main cause of the difference between the two groups of countries.
+
+## 
+
+Statistical techniques can help estimate the roles of different variables that might contribute to a correlation. Multivariate linear regression tells you what combination of a set of variables comes closest to duplicating the data. It assumes that each variable contributes additively, each with a different weighting. Multivariate linear regression is often referred to as "regression", although there are also other kinds of regression.
+
+```{r multivariate}
+question("Which statistical technique might be used to try to estimate the effects of mask wearing and temperature on COVID-19 spread?",
+    answer("Regression.",correct=TRUE),
+    answer("Standard deviation."),
+    answer("Post hoc ergo propter hoc."),
+    allow_retry = TRUE
+)
+```
+
+## 
+
+```{r, echo=FALSE, fig.cap="https://twitter.com/jperla/status/1243349875015553024", out.width = "750px"}
+knitr::include_graphics("images/masksNoMasksExplainsIt.png") #You can't change the image directory
+``` 
+
+The [tweeter](https://twitter.com/jperla/status/1243349875015553024) of this plot got a lot of responses to their posting of the scrawled-on plot.
+Here is one that points out some of the third variables that confound the comparison between the two sets of countries. 
+
+```{r, echo=FALSE, fig.cap="", out.width = "430px"}
+knitr::include_graphics("images/maskNoMasks3rdVariablesTweet.png") #You can't change the image directory
+```
+
+##
+
+There are almost always many potentially-relevant differences between countries, from genetic to cultural to environmental and governmental. As a result, the most likely explanation for the lower infection growth rate of the blue-circled countries is a combination of causes, one of which *may* be masks. 
+
+##
+
+Someone else had a more creative explanation of the differences between the two groups of countries:
+
+```{r, echo=FALSE, fig.cap="", out.width = "430px"}
+knitr::include_graphics("images/bubbleNotBubbleTea.jpg") #You can't change the image directory
+```
+
+This graphic seems to suggest that ingestion of bubble tea stops the virus!
+
+That is unlikely. But the person's point is that there are typically many differences between two groups of countries, only some of which you are likely to think of at first.
+
+##
+
+Here is another response from twitter:
+
+```{r, echo=FALSE, fig.cap="", out.width = "430px"}
+knitr::include_graphics("images/maskNoMasksItalyWearingMasksTweet.png") #You can't change the image directory
+```
+
+Dario claims that in addition to the blue-circled countries, Italians have also been wearing masks a lot, yet their infection rate has not slowed. Others have [pointed out](https://twitter.com/angie_rasmussen/status/1243988682429722625) that people in China also began wearing masks at a high rate, yet their infection rate did not slow until much later.
+
+Such suggestions highlight the fact that you should be skeptical of the claims of a random person on the internet, even if their claim comports with your intuition.
+
+##
+
+```{r, echo=FALSE, out.width = "750px"}
+knitr::include_graphics("images/30MarCovid19CasesFT.png") #You can't change the image directory for Shiny apps
+```
+
+Another thing that people assume when they see a graph is that numbers plotted on the same axis all mean the same thing. But can the count of cases from one country really be compared so directly to that of another country?
+
+##
+
+```{r, echo=FALSE, fig.cap="", out.width = "430px"}
+knitr::include_graphics("images/myIssuesWithTheGraphs.png") #You can't change the image directory
+#https://twitter.com/bewithchrisjr/status/1243621603834904576
+```
+
+As Christophe Toukam implies above, countries vary in their testing policies. Moreover, these testing policies change over time, which can contribute to different growth rates for different countries.
+
+## 
+
+A fourth response to the scrawled-on plot, below, does not argue with the claim. Rather, it asserts that there is independent reason to believe the claim that masks slow infection:
+
+```{r, echo=FALSE, fig.cap="", out.width = "430px"}
+knitr::include_graphics("images/maskNoMasksMaskShouldHelpTweet.png") #You can't change the image directory
+```
+
+Although the scrawled-on plot by itself provides only very weak evidence that masks are effective, reasons to believe a claim may also come from other places.
+
+During an exponentially-growing pandemic, one doesn't have time to wait for strong evidence. Wearing masks is a  plausible cause of reduced transmission, so it may be a good policy to adopt even when empirical evidence for its effectiveness is weak.
+
+You have reached the end! Please follow the guidelines of the health authorities in your area.
