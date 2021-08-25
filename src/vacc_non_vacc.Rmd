@@ -18,6 +18,8 @@ vacc_per_init = 30 #initial slider position for percentage of population vaccina
 #TO-DO: Percentual real para vacina selecionada
 vacc_and_covid_prob = 0.1 #Only temporary number - Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.  
 #refs: https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&smid=tw-nytimes
+```
+```{r server_parameters, context="server"}
 point_size = 2
 ```
 
