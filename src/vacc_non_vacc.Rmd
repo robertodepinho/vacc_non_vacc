@@ -112,6 +112,7 @@ output$plot_covid_only <- renderPlot({
   #TO-DO:Gráfico WAFFLE Padronizado
   #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
   vacc_per = input$vacc_per_a
+  population_size = nrow(population)
   
   points_dist = 100/sqrt(population_size) #target mean distance between points
   
