@@ -106,7 +106,7 @@ pop_summ <- pop_summ %>%
          ve_icu = 1- n_icu/(tot_icu-n_icu),
          ve_death = 1- n_death/(tot_death-n_death))
 pop_summ <- pop_summ %>%
-  mutate(across(where(is.numeric),function(x) {replace(x,x<0, NA)*100}))
+  mutate(across(where(is.numeric),function(x) {replace(x,x<0, NA)}))
 knitr::kable(pop_summ, digits = 3)
 
 ```
