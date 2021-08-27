@@ -14,18 +14,37 @@ knitr::opts_chunk$set(echo = FALSE)
 ```{r general_parameters}
 population_size = 1000
 #TO-DO: percentual vacinado do Brasil
-vacc_per_init = 30 #initial slider position for percentage of population vaccinated
-#TO-DO: Percentual real para vacina selecionada
-vacc_and_covid_prob = 0.1 #Only temporary number - Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.  
+#TO-DO: Percentual real para vacina selecionada - fully
+vacc_per_init = 27 #initial slider position for percentage of population vaccinated
+
 #refs: https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&smid=tw-nytimes
+#REF: https://www.medrxiv.org/content/10.1101/2021.08.21.21261501v1.full.pdf 
+#Vaxzevria/Fiocruz VE Fully vacc ADJUSTED Table S1
+vacc_and_covid_prob = 0.30 #Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
+
+
 ```
-```{r server_parameters, context="server"}
+```{r server_parameters_init, context="server"}
 point_size = 2
+
+observeEvent(input$vacc_per_a,{
+  if(input$vacc_per_a !=input$vacc_per_b)
+    updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_a)
+})
+
+observeEvent(input$vacc_per_b,{
+  if(input$vacc_per_b !=input$vacc_per_a)
+    updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b)
+})
+
+
+
+
 ```
 
 ```{r data}
-population = tibble(x = runif(population_size)*100, 
-                    y = runif(population_size)*100,
+population = tibble(x = runif(population_size)*99+1, 
+                    y = runif(population_size)*99+1,
                     covid_if_vacc = sample(x = c(TRUE,FALSE),
                                            replace = TRUE,
                                            size = population_size,
@@ -46,9 +65,10 @@ Usando o controle, você pode determinar quantas delas estão vacinadas.
 ```{r plot_vacc_non_vacc, context="server"}
 output$plot_vacc_non_vacc <- renderPlot({
   #TO-DO:Gráfico WAFFLE
-  vacc_per = input$vacc_per
-  population %>%
-    ggplot(aes(x=x, y=y, color = x > vacc_per)) +
+  vacc_per = input$vacc_per_a
+  population %>% 
+    mutate( vacc = x < vacc_per) %>%
+    ggplot(aes(x=x, y=y, color = vacc)) +
     geom_point(size = point_size) +
     theme_minimal()
   
@@ -56,21 +76,22 @@ output$plot_vacc_non_vacc <- renderPlot({
 ```
 ```{r vacc_per_control, echo=FALSE}
 plotOutput("plot_vacc_non_vacc")
-sliderInput("vacc_per", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
+sliderInput("vacc_per_a", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 
 
 <!-- #TO-DO:Texto explicando que mesmo com vacina pode covid -->
-Mesmo com vacina, pode ter covid..... 
+Mesmo com vacina, pode ter covid..... no gráfico abaixo, as pessoas com covid estão marcadas XYZ. Como nesta simulação partimos do princípio que todas as pessoas foram expostas ao vírus em grau suficiente para infectar alguem não imunizado,  todas as pessoas não vacinadas pegaram covid. Percebam que o espaço das pessoas não vacinadas está bem mais cheio de infectados, mas também vemos casos entre as vacinadas.     
 
 ```{r plot_vacc_non_vacc_covid, context="server"}
 output$plot_vacc_non_vacc_covid <- renderPlot({
   #TO-DO:Gráfico WAFFLE Padronizado
-  vacc_per = input$vacc_per
+  vacc_per = input$vacc_per_a
   population %>%
-    mutate( sick = (x > vacc_per | covid_if_vacc)) %>%  #sick, if not vacc or if vacc but still in prob.
+    mutate( vacc = x < vacc_per, 
+            sick = (x > vacc_per | covid_if_vacc)) %>%  #sick, if not vacc or if vacc but still in prob.
     ggplot(aes(x=x, y=y, 
-               color = x > vacc_per, #color indicates vaccinated or not - change
+               color = vacc, #color indicates vaccinated or not - change
                alpha = sick)) +
     geom_point(size = point_size) +
     theme_minimal()
@@ -89,13 +110,33 @@ Só os doentes / doentes "arrumados" - mostrar percentuais
 output$plot_covid_only <- renderPlot({
   #TO-DO:Arrumar em barras
   #TO-DO:Gráfico WAFFLE Padronizado
-  vacc_per = input$vacc_per
-  population %>%
-    mutate( sick = (x > vacc_per | covid_if_vacc)) %>% #sick, if not vacc or if vacc but still in prob.
-    filter(sick) %>%
-    ggplot(aes(x=x, y=y, 
-               color = x > vacc_per #color indicates vaccinated or not - change
-                
+  #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
+  vacc_per = input$vacc_per_a
+  
+  points_dist = 100/sqrt(population_size) #target mean distance between points
+  
+  sick_population <- population %>%
+    mutate( vacc = x < vacc_per, 
+            sick = (!vacc | covid_if_vacc)) %>% #sick, if not vacc or if vacc but still in prob.
+    filter(sick)
+  
+  vacc_sick_n <- sick_population %>% group_by(vacc) %>%
+    summarise(n = n())
+  
+  #heights X widths
+  #choose column width so that the higher group reaches the top 
+  number_of_cols = max(3,max(vacc_sick_n$n / sqrt(population_size))) # in columns
+  col_width_dist = number_of_cols * points_dist
+  sick_population %>%
+    group_by(vacc) %>%
+    mutate( x_bar = runif(n()) * col_width_dist  - vacc*col_width_dist,
+            y_bar = runif(n()) * n()/number_of_cols * points_dist) %>%
+    ungroup() %>%
+    
+    
+    ggplot(aes(x=x_bar, y=y_bar, 
+               color = vacc #color indicates vaccinated or not - change
+               
     )) +
     geom_point(size = point_size) + #TO-DO: adjust size? 
     theme_minimal()
@@ -104,10 +145,14 @@ output$plot_covid_only <- renderPlot({
 ```
 ```{r covid_only, echo=FALSE}
 plotOutput("plot_covid_only")
+sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 
+<!-- TO-DO:TEXTO SOBRE percentual, testes com 100%, calculo de equilibrio  -->
 
-# Código exemplo a partir daqui - apagar ao final
+<!-- TO-DO:GRAFICO de percentual de cada população -->
+
+## Código exemplo a partir daqui - apagar ao final
 
 
 TESTE de SLIDER DUPLICADO
@@ -126,20 +171,20 @@ observeEvent(input$bins_a,{
     updateSliderInput(inputId = "bins_b", value = input$bins_a)
   if(input$bins_a !=input$bins_c)
     updateSliderInput(inputId = "bins_c", value = input$bins_a)
-  })
+})
 
 observeEvent(input$bins_b,{
   if(input$bins_b !=input$bins_a)
     updateSliderInput(inputId = "bins_a", value = input$bins_b)
   if(input$bins_b !=input$bins_c)
     updateSliderInput(inputId = "bins_c", value = input$bins_b)
-  })
+})
 observeEvent(input$bins_c,{
   if(input$bins_c !=input$bins_a)
     updateSliderInput(inputId = "bins_a", value = input$bins_c)
   if(input$bins_c !=input$bins_b)
     updateSliderInput(inputId = "bins_b", value = input$bins_c)
-  })
+})
 
 
 output$distPlot <- renderPlot({
