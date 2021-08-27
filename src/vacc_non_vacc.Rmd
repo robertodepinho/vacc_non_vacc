@@ -8,7 +8,8 @@ runtime: shiny_prerendered
 
 ```{r setup, include=FALSE}
 library(learnr)
-library(tidyverse)
+library(tidyverse) #load only needed components?
+library(questionr)
 knitr::opts_chunk$set(echo = FALSE)
 ```
 ```{r general_parameters}
@@ -20,7 +21,7 @@ vacc_per_init = 27 #initial slider position for percentage of population vaccina
 #refs: https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&smid=tw-nytimes
 #REF: https://www.medrxiv.org/content/10.1101/2021.08.21.21261501v1.full.pdf 
 #Vaxzevria/Fiocruz VE Fully vacc ADJUSTED Table S1
-vacc_and_covid_prob = 0.30 #Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
+infected_if_vacc_prob = 0.30 #Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
 
 
 ```
@@ -45,11 +46,10 @@ observeEvent(input$vacc_per_b,{
 ```{r data}
 population = tibble(x = runif(population_size)*99+1, 
                     y = runif(population_size)*99+1,
-                    covid_if_vacc = sample(x = c(TRUE,FALSE),
-                                           replace = TRUE,
-                                           size = population_size,
-                                           prob = c(vacc_and_covid_prob,1-vacc_and_covid_prob)
-                    )
+                    infected_if_vacc = sample(x = c(TRUE,FALSE),
+                                              replace = TRUE,
+                                              size = population_size,
+                                              prob = c(infected_if_vacc_prob,1-infected_if_vacc_prob))
 )
 ```
 
@@ -67,7 +67,7 @@ output$plot_vacc_non_vacc <- renderPlot({
   #TO-DO:Gráfico WAFFLE
   vacc_per = input$vacc_per_a
   population %>% 
-    mutate( vacc = x < vacc_per) %>%
+    mutate( vacc = x <= vacc_per) %>%
     ggplot(aes(x=x, y=y, color = vacc)) +
     geom_point(size = point_size) +
     theme_minimal()
@@ -88,8 +88,8 @@ output$plot_vacc_non_vacc_covid <- renderPlot({
   #TO-DO:Gráfico WAFFLE Padronizado
   vacc_per = input$vacc_per_a
   population %>%
-    mutate( vacc = x < vacc_per, 
-            infected = (x > vacc_per | covid_if_vacc)) %>%  #infected, if not vacc or if vacc but still in prob.
+    mutate( vacc = x <= vacc_per, 
+            infected = (!vacc | infected_if_vacc)) %>%  #infected, if not vacc or if vacc but still in prob.
     ggplot(aes(x=x, y=y, 
                color = vacc, #color indicates vaccinated or not - change
                alpha = infected)) +
@@ -117,8 +117,8 @@ output$plot_covid_only <- renderPlot({
   points_dist = 100/sqrt(population_size) #target mean distance between points
   
   infected_population <- population %>%
-    mutate( vacc = x < vacc_per, 
-            infected = (!vacc | covid_if_vacc)) %>% #infected, if not vacc or if vacc but still in prob.
+    mutate( vacc = x <= vacc_per, 
+            infected = (!vacc | infected_if_vacc)) %>% #infected, if not vacc or if vacc but still in prob.
     filter(infected)
   
   vacc_infected_n <- infected_population %>% group_by(vacc) %>%
@@ -152,6 +152,97 @@ sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 
 <!-- TO-DO:TEXTO SOBRE percentual, testes com 100%, calculo de equilibrio  -->
 
 <!-- TO-DO:GRAFICO de percentual de cada população -->
+
+## Validação da simulação
+
+```{r simulado para validar}
+
+sample_tf <- function(size, prob) {
+  return(sample(x = c(TRUE,FALSE),
+                replace = TRUE,
+                size = population_size,
+                prob = prob))
+}
+
+#repetindo aqui definições aqui
+#TO-DO:vacc effective ofr hosp, icu, death
+population_size = 100000
+
+vacc_per = 50 #para a pop. simulada para a validação, simplificar com 50,50
+
+#Vaxzevria/Fiocruz VE Fully vacc ADJUSTED Table S1
+infected_if_vacc_prob = 1-0.70 #Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
+
+#Probability of being hospitalized in ICU/Death  if infected enough to get covid unvaccinated.
+#From Table 2
+#hosp_if_infected_prob =  (hosp_events / hosp_person-days) / (infected_events / infected_person-days)
+hosp_if_infected_prob =  (18420 / 474679253) / (76780 / 474317595)
+
+icu_if_infected_prob =  (6272 / 474760394) / (76780 / 474317595)
+
+death_if_infected_prob =  (6255 / 474761099) / (76780 / 474317595)
+
+#From Table S1
+#prob = 1 - VE 
+# hosp_if_infected_prob * (1-VE) / infected_if_vacc_prob
+hosp_if_vacc_prob = hosp_if_infected_prob * (1-0.868) / infected_if_vacc_prob
+icu_if_vacc_prob = icu_if_infected_prob * (1-0.881) / infected_if_vacc_prob
+death_if_vacc_prob = death_if_infected_prob * (1-0.902) / infected_if_vacc_prob
+
+population = tibble(x = runif(population_size)*99+1, 
+                    y = runif(population_size)*99+1,
+                    infected_if_vacc = sample_tf(size = population_size,
+                                                 prob = c(infected_if_vacc_prob,
+                                                          1-infected_if_vacc_prob)))
+
+
+pop_summ <- population %>%
+  mutate( vacc = x <= vacc_per, 
+          infected = (!vacc | infected_if_vacc),
+          #hosp/icu/death if infected
+          hosp = infected & ifelse(vacc, 
+                        sample_tf(size = population_size,
+                                  prob = c(hosp_if_vacc_prob,
+                                           1-hosp_if_vacc_prob)),
+                        sample_tf(size = population_size,
+                                  prob = c(hosp_if_infected_prob,
+                                           1-hosp_if_infected_prob))),
+          icu = infected & ifelse(vacc, 
+                        sample_tf(size = population_size,
+                                  prob = c(icu_if_vacc_prob,
+                                           1-icu_if_vacc_prob)),
+                        sample_tf(size = population_size,
+                                  prob = c(icu_if_infected_prob,
+                                           1-icu_if_infected_prob))),
+          death = infected & ifelse(vacc, 
+                        sample_tf(size = population_size,
+                                  prob = c(death_if_vacc_prob,
+                                           1-death_if_vacc_prob)),
+                        sample_tf(size = population_size,
+                                  prob = c(death_if_infected_prob,
+                                           1-death_if_infected_prob)))) %>%
+  
+  group_by(vacc) %>%
+  summarise(n = n(),
+            n_infected = sum(infected),
+            n_hosp = sum(hosp),
+            n_icu = sum(icu),
+            n_death = sum(death))
+
+pop_summ <- pop_summ %>% 
+  mutate(tot_infected = sum(n_infected),
+         tot_hosp = sum(n_hosp),
+         tot_icu = sum(n_icu),
+         tot_death = sum(n_death)) %>% 
+  group_by(vacc) %>%
+  mutate(ve_infected = 1- n_infected/(tot_infected-n_infected),
+         ve_hosp = 1- n_hosp/(tot_hosp-n_hosp),
+         ve_icu = 1- n_icu/(tot_icu-n_icu),
+         ve_death = 1- n_death/(tot_death-n_death))
+knitr::kable(pop_summ)
+
+```
+
 
 ## Código exemplo a partir daqui - apagar ao final
 

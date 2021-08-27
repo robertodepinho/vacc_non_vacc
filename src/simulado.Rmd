@@ -1,0 +1,104 @@
+---
+title: "Simulado"
+author: "Roberto de Pinho"
+date: "27/08/2021"
+output: pdf_document
+classoption: landscape
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Validação da simulação
+
+```{r simulado para validar, echo=FALSE}
+
+sample_tf <- function(size, prob) {
+  return(sample(x = c(TRUE,FALSE),
+                replace = TRUE,
+                size = population_size,
+                prob = prob))
+}
+
+#repetindo aqui definições aqui
+#TO-DO:vacc effective ofr hosp, icu, death
+population_size = 100000
+
+vacc_per = 50 #para a pop. simulada para a validação, simplificar com 50,50
+
+#Vaxzevria/Fiocruz VE Fully vacc ADJUSTED Table S1
+infected_if_vacc_prob = 1-0.70 #Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
+
+#Probability of being hospitalized in ICU/Death  if infected enough to get covid unvaccinated.
+#From Table 2
+#hosp_if_infected_prob =  (hosp_events / hosp_person-days) / (infected_events / infected_person-days)
+hosp_if_infected_prob =  (18420 / 474679253) / (76780 / 474317595)
+
+icu_if_infected_prob =  (6272 / 474760394) / (76780 / 474317595)
+
+death_if_infected_prob =  (6255 / 474761099) / (76780 / 474317595)
+
+#From Table S1
+#prob = 1 - VE 
+# hosp_if_infected_prob * (1-VE) / infected_if_vacc_prob
+hosp_if_vacc_prob = hosp_if_infected_prob * (1-0.868) / infected_if_vacc_prob
+icu_if_vacc_prob = icu_if_infected_prob * (1-0.881) / infected_if_vacc_prob
+death_if_vacc_prob = death_if_infected_prob * (1-0.902) / infected_if_vacc_prob
+
+population = tibble(x = runif(population_size)*99+1, 
+                    y = runif(population_size)*99+1,
+                    infected_if_vacc = sample_tf(size = population_size,
+                                                 prob = c(infected_if_vacc_prob,
+                                                          1-infected_if_vacc_prob)))
+
+
+pop_summ <- population %>%
+  mutate( vacc = x <= vacc_per, 
+          infected = (!vacc | infected_if_vacc),
+          #hosp/icu/death if infected
+          hosp = infected & ifelse(vacc, 
+                                   sample_tf(size = population_size,
+                                             prob = c(hosp_if_vacc_prob,
+                                                      1-hosp_if_vacc_prob)),
+                                   sample_tf(size = population_size,
+                                             prob = c(hosp_if_infected_prob,
+                                                      1-hosp_if_infected_prob))),
+          icu = infected & ifelse(vacc, 
+                                  sample_tf(size = population_size,
+                                            prob = c(icu_if_vacc_prob,
+                                                     1-icu_if_vacc_prob)),
+                                  sample_tf(size = population_size,
+                                            prob = c(icu_if_infected_prob,
+                                                     1-icu_if_infected_prob))),
+          death = infected & ifelse(vacc, 
+                                    sample_tf(size = population_size,
+                                              prob = c(death_if_vacc_prob,
+                                                       1-death_if_vacc_prob)),
+                                    sample_tf(size = population_size,
+                                              prob = c(death_if_infected_prob,
+                                                       1-death_if_infected_prob)))) %>%
+  
+  group_by(vacc) %>%
+  summarise(n = n(),
+            n_infected = sum(infected),
+            n_hosp = sum(hosp),
+            n_icu = sum(icu),
+            n_death = sum(death))
+
+pop_summ <- pop_summ %>% 
+  mutate(tot_infected = sum(n_infected),
+         tot_hosp = sum(n_hosp),
+         tot_icu = sum(n_icu),
+         tot_death = sum(n_death)) %>% 
+  group_by(vacc) %>%
+  mutate(ve_infected = 1- n_infected/(tot_infected-n_infected),
+         ve_hosp = 1- n_hosp/(tot_hosp-n_hosp),
+         ve_icu = 1- n_icu/(tot_icu-n_icu),
+         ve_death = 1- n_death/(tot_death-n_death))
+pop_summ <- pop_summ %>%
+  mutate(across(where(is.numeric),function(x) {replace(x,x<0, NA)}))
+knitr::kable(pop_summ, digits = 3)
+
+```

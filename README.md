@@ -8,7 +8,7 @@ To do list:
 
 - [ ] Obter parâmetros publicados das vacinas para simulações 
   - [X] a) definir referências 
-  - [ ] b) fazer calculos 
+  - [X] b) fazer calculos 
   - [ ] c) validar calculos
 - [ ] Criar scripts separados para:
   - [ ] a) Executar as simulações
