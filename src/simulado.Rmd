@@ -9,9 +9,17 @@ classoption: landscape
 ```{r setup, include=FALSE}
 library(tidyverse)
 knitr::opts_chunk$set(echo = TRUE)
+library(pander)
+panderOptions('round', 2)
+panderOptions('keep.trailing.zeros', TRUE)
 ```
 
 ## Validação da simulação
+
+Foi feita a geração de uma tabela simulada de 100 mil indivíduos. Por sorteio, com probabilidade 50%/50% foram considerados vacinados ou não. Considera-se que todos os indivíduos foram expostos por tempo suficiente para que sejam infectados, caso sem vacina. 
+
+A partir dos valores das Tabelas 2 e S1 ( https://doi.org/10.1101/2021.08.21.21261501 ) foram feitos sorteios para marcar cada indivíduo com Infection, Hospitalization, ICU admission e Death, considerando o status de vacinados ou não. Os resultados do sorteio de uma população são apresentados na tabela abaixo. São considerados apenas os valores para Vaxzevria/Fiocruz / Fully vaccinated.
+
 
 ```{r simulado para validar, echo=FALSE}
 
@@ -28,23 +36,23 @@ population_size = 100000
 
 vacc_per = 50 #para a pop. simulada para a validação, simplificar com 50,50
 
-#Vaxzevria/Fiocruz VE Fully vacc ADJUSTED Table S1
-infected_if_vacc_prob = 1-0.70 #Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
+#Vaxzevria/Fiocruz VE Fully vacc Table 1
+infected_if_vacc_prob = 1-0.729 #Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
 
 #Probability of being hospitalized in ICU/Death  if infected enough to get covid unvaccinated.
 #From Table 2
 #hosp_if_infected_prob =  (hosp_events / hosp_person-days) / (infected_events / infected_person-days)
-hosp_if_infected_prob =  (18420 / 474679253) / (76780 / 474317595)
+hosp_if_infected_prob =  (22449 / 607756996) / (130302 / 607095423)
 
-icu_if_infected_prob =  (6272 / 474760394) / (76780 / 474317595)
+icu_if_infected_prob =  (7558 / 607855737) / (130302 / 607095423)
 
-death_if_infected_prob =  (6255 / 474761099) / (76780 / 474317595)
+death_if_infected_prob =  (7037 / 607859573) / (130302 / 607095423)
 
 #From Table S1
 #prob = 1 - VE 
 # hosp_if_infected_prob * (1-VE) / infected_if_vacc_prob
-hosp_if_vacc_prob = hosp_if_infected_prob * (1-0.868) / infected_if_vacc_prob
-icu_if_vacc_prob = icu_if_infected_prob * (1-0.881) / infected_if_vacc_prob
+hosp_if_vacc_prob = hosp_if_infected_prob * (1-0.88) / infected_if_vacc_prob
+icu_if_vacc_prob = icu_if_infected_prob * (1-0.891) / infected_if_vacc_prob
 death_if_vacc_prob = death_if_infected_prob * (1-0.902) / infected_if_vacc_prob
 
 population = tibble(x = runif(population_size)*99+1, 
@@ -98,7 +106,37 @@ pop_summ <- pop_summ %>%
          ve_icu = 1- n_icu/(tot_icu-n_icu),
          ve_death = 1- n_death/(tot_death-n_death))
 pop_summ <- pop_summ %>%
-  mutate(across(where(is.numeric),function(x) {replace(x,x<0, NA)}))
+  mutate(across(where(is.numeric),function(x) {replace(x,x<0, NA)*100}))
 knitr::kable(pop_summ, digits = 3)
 
 ```
+### Probabilidades 
+Probabilidade de infecção se vacinado
+
+infected_if_vacc_prob = 1-0.729 = `r (1-0.729)*100`%
+
+### Probabilidade de ser Hospitalizado / UTI / Morte se infectado (sem vacina).
+
+Tabela 2
+hosp_if_infected_prob =  (hosp_events / hosp_person-days) / (infected_events / infected_person-days)
+
+hosp_if_infected_prob =  (22449 / 607756996) / (130302 / 607095423) = `r round((22449 / 607756996) / (130302 / 607095423)*100,3)`%
+
+icu_if_infected_prob =  (7558 / 607855737) / (130302 / 607095423) =  `r round((7558 / 607855737) / (130302 / 607095423)*100,3)`%
+
+death_if_infected_prob =  (7037 / 607859573) / (130302 / 607095423) =   `r round((7037 / 607859573) / (130302 / 607095423)*100,3)`%
+
+
+### Probabilidade de ser Hospitalizado / UTI / Morte se infectado (com vacina).
+
+Tabela S1
+
+prob = 1 - VE 
+
+hosp_if_infected_prob * (1-VE) / infected_if_vacc_prob
+
+hosp_if_vacc_prob = hosp_if_infected_prob * (1-0.88) / infected_if_vacc_prob = `r round(hosp_if_infected_prob * (1-0.88) / infected_if_vacc_prob*100,3)`%
+
+icu_if_vacc_prob = icu_if_infected_prob * (1-0.891) / infected_if_vacc_prob = `r round( icu_if_infected_prob * (1-0.891) / infected_if_vacc_prob*100,3)`%
+
+death_if_vacc_prob = death_if_infected_prob * (1-0.902) / infected_if_vacc_prob = `r round( death_if_infected_prob * (1-0.902) / infected_if_vacc_prob*100,3)`%
