@@ -217,7 +217,7 @@ $(document).ready(function () {
 <script type="application/shiny-prerendered" data-context="server-start">
 library(learnr)
 library(tidyverse) #load only needed components?
-library(questionr)
+source("pop_gen.R")
 knitr::opts_chunk$set(echo = FALSE)
 </script>
  
@@ -232,6 +232,7 @@ session$onSessionEnded(function() {
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
+population_size = 1000
 point_size = 2
 
 observeEvent(input$vacc_per_a,{
@@ -245,26 +246,18 @@ observeEvent(input$vacc_per_b,{
 })
 
 
-
-
-</script>
- 
-<script type="application/shiny-prerendered" data-context="data">
-population = tibble(x = runif(population_size)*99+1, 
-                    y = runif(population_size)*99+1,
-                    infected_if_vacc = sample(x = c(TRUE,FALSE),
-                                              replace = TRUE,
-                                              size = population_size,
-                                              prob = c(infected_if_vacc_prob,1-infected_if_vacc_prob))
-)
+population_outcome <- reactive({
+  vacc_per = input$vacc_per_a
+  return(get_population(population_size = population_size, 
+                 infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+    add_outcomes(vacc_per))
+})
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
 output$plot_vacc_non_vacc <- renderPlot({
   #TO-DO:Gráfico WAFFLE
-  vacc_per = input$vacc_per_a
-  population %>% 
-    mutate( vacc = x <= vacc_per) %>%
+  population_outcome() %>% 
     ggplot(aes(x=x, y=y, color = vacc)) +
     geom_point(size = point_size) +
     theme_minimal()
@@ -275,10 +268,7 @@ output$plot_vacc_non_vacc <- renderPlot({
 <script type="application/shiny-prerendered" data-context="server">
 output$plot_vacc_non_vacc_covid <- renderPlot({
   #TO-DO:Gráfico WAFFLE Padronizado
-  vacc_per = input$vacc_per_a
-  population %>%
-    mutate( vacc = x <= vacc_per, 
-            infected = (!vacc | infected_if_vacc)) %>%  #infected, if not vacc or if vacc but still in prob.
+  population_outcome() %>%
     ggplot(aes(x=x, y=y, 
                color = vacc, #color indicates vaccinated or not - change
                alpha = infected)) +
@@ -292,34 +282,29 @@ output$plot_covid_only <- renderPlot({
   #TO-DO:Arrumar em barras
   #TO-DO:Gráfico WAFFLE Padronizado
   #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
-  vacc_per = input$vacc_per_a
-  population_size = nrow(population)
+   
+  #population_size = nrow(pop_outcome)
   
   points_dist = 100/sqrt(population_size) #target mean distance between points
   
-  infected_population <- population %>%
-    mutate( vacc = x <= vacc_per, 
-            infected = (!vacc | infected_if_vacc)) %>% #infected, if not vacc or if vacc but still in prob.
+  pop_infected <- population_outcome() %>%
     filter(infected)
   
-  vacc_infected_n <- infected_population %>% group_by(vacc) %>%
+  vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
     summarise(n = n())
   
   #heights X widths
   #choose column width so that the higher group reaches the top 
   number_of_cols = max(3,max(vacc_infected_n$n / sqrt(population_size))) # in columns
   col_width_dist = number_of_cols * points_dist
-  infected_population %>%
+  
+  pop_infected %>%
     group_by(vacc) %>%
     mutate( x_bar = runif(n()) * col_width_dist  - vacc*col_width_dist,
             y_bar = runif(n()) * n()/number_of_cols * points_dist) %>%
     ungroup() %>%
-    
-    
     ggplot(aes(x=x_bar, y=y_bar, 
-               color = vacc #color indicates vaccinated or not - change
-               
-    )) +
+               color = vacc )) +  #color indicates vaccinated or not - change
     geom_point(size = point_size) + #TO-DO: adjust size? 
     theme_minimal()
   
@@ -378,11 +363,11 @@ output$`tutorial-exercise-print-limit-output` <- renderUI({
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::question_prerendered_chunk(structure(list(type = "learnr_radio", label = "quiz-1", question = structure("Which package contains functions for installing other R packages?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_a424f4d",     option = "base", value = "base", label = structure("base", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_21038ae",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_7722b41",     option = "utils", value = "utils", label = structure("utils", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_83bc8f1",     option = "codetools", value = "codetools", label = structure("codetools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-1-answer", question = "quiz-1"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich package contains functions for installing other R packages?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 1539252659.78323, options = list()), class = c("learnr_radio", "tutorial_question")))
+learnr:::question_prerendered_chunk(structure(list(type = "learnr_radio", label = "quiz-1", question = structure("Which package contains functions for installing other R packages?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_396dd5d",     option = "base", value = "base", label = structure("base", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_6d6b388",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_72b011a",     option = "utils", value = "utils", label = structure("utils", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_2241b38",     option = "codetools", value = "codetools", label = structure("codetools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-1-answer", question = "quiz-1"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich package contains functions for installing other R packages?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 1924081174.10403, options = list()), class = c("learnr_radio", "tutorial_question")))
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", label = "quiz-2", question = structure("Which of the R packages listed below are used to create plots?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_ac41d9b",     option = "lattice", value = "lattice", label = structure("lattice", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_3e9be4b",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_fe15391",     option = "stats", value = "stats", label = structure("stats", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_7a28019",     option = "grid", value = "grid", label = structure("grid", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-2-answer", question = "quiz-2"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich of the R packages listed below are used to create plots?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 1181839228.94966, options = list()), class = c("learnr_checkbox", "tutorial_question")))
+learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", label = "quiz-2", question = structure("Which of the R packages listed below are used to create plots?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_d3dcb36",     option = "lattice", value = "lattice", label = structure("lattice", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_83ef423",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_9011e9b",     option = "stats", value = "stats", label = structure("stats", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_f983fdf",     option = "grid", value = "grid", label = structure("grid", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-2-answer", question = "quiz-2"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich of the R packages listed below are used to create plots?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 1275558698.40602, options = list()), class = c("learnr_checkbox", "tutorial_question")))
 </script>
  <!--html_preserve-->
 <script type="application/shiny-prerendered" data-context="dependencies">
@@ -391,7 +376,7 @@ learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", lab
 <!--/html_preserve-->
 <!--html_preserve-->
 <script type="application/shiny-prerendered" data-context="execution_dependencies">
-{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages","version"]},"class":{"type":"character","attributes":{},"value":["data.frame"]},"row.names":{"type":"integer","attributes":{},"value":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86]}},"value":[{"type":"character","attributes":{},"value":["assertthat","backports","base","broom","bslib","cellranger","checkmate","cli","colorspace","compiler","crayon","datasets","DBI","dbplyr","digest","dplyr","ellipsis","evaluate","fansi","fastmap","forcats","fs","generics","ggplot2","glue","graphics","grDevices","grid","gtable","haven","highr","hms","htmltools","htmlwidgets","httpuv","httr","jquerylib","jsonlite","knitr","labelled","later","learnr","lifecycle","lubridate","magrittr","markdown","methods","mime","miniUI","modelr","munsell","pillar","pkgconfig","promises","purrr","questionr","R6","Rcpp","readr","readxl","reprex","rlang","rmarkdown","rprojroot","rstudioapi","rvest","sass","scales","shiny","stats","stringi","stringr","tibble","tidyr","tidyselect","tidyverse","tools","tzdb","utf8","utils","vctrs","withr","xfun","xml2","xtable","yaml"]},{"type":"character","attributes":{},"value":["0.2.1","1.2.1","4.1.1","0.7.9","0.2.5.1","1.1.0","2.0.0","3.0.1","2.0-2","4.1.1","1.4.1","4.1.1","1.1.1","2.1.1","0.6.27","1.0.7","0.3.2","0.14","0.5.0","1.1.0","0.5.1","1.5.0","0.1.0","3.3.5","1.4.2","4.1.1","4.1.1","4.1.1","0.3.0","2.4.1","0.9","1.1.0","0.5.1.1","1.5.3","1.6.1","1.4.2","0.1.4","1.7.2","1.33","2.8.0","1.2.0","0.10.1","1.0.0","1.7.10","2.0.1","1.1","4.1.1","0.11","0.1.1.1","0.1.8","0.5.0","1.6.2","2.0.3","1.2.0.1","0.3.4","0.7.4","2.5.0","1.0.7","2.0.0","1.3.1","2.0.0","0.4.11","2.9","2.0.2","0.13","1.0.1","0.4.0","1.1.1","1.6.0","4.1.1","1.7.3","1.4.0","3.1.3","1.1.3","1.1.1","1.3.1","4.1.1","0.1.2","1.2.2","4.1.1","0.3.8","2.4.2","0.24","1.3.2","1.8-4","2.2.1"]}]}]}
+{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages"]}},"value":[{"type":"list","attributes":{"names":{"type":"character","attributes":{},"value":["packages","version"]},"class":{"type":"character","attributes":{},"value":["data.frame"]},"row.names":{"type":"integer","attributes":{},"value":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82]}},"value":[{"type":"character","attributes":{},"value":["assertthat","backports","base","broom","bslib","cellranger","checkmate","cli","colorspace","compiler","crayon","datasets","DBI","dbplyr","digest","dplyr","ellipsis","evaluate","fansi","fastmap","forcats","fs","generics","ggplot2","glue","graphics","grDevices","grid","gtable","haven","hms","htmltools","htmlwidgets","httpuv","httr","jquerylib","jsonlite","knitr","later","learnr","lifecycle","lubridate","magrittr","markdown","methods","mime","modelr","munsell","pillar","pkgconfig","promises","purrr","R6","Rcpp","readr","readxl","reprex","rlang","rmarkdown","rprojroot","rstudioapi","rvest","sass","scales","shiny","stats","stringi","stringr","tibble","tidyr","tidyselect","tidyverse","tools","tzdb","utf8","utils","vctrs","withr","xfun","xml2","xtable","yaml"]},{"type":"character","attributes":{},"value":["0.2.1","1.2.1","4.1.1","0.7.9","0.2.5.1","1.1.0","2.0.0","3.0.1","2.0-2","4.1.1","1.4.1","4.1.1","1.1.1","2.1.1","0.6.27","1.0.7","0.3.2","0.14","0.5.0","1.1.0","0.5.1","1.5.0","0.1.0","3.3.5","1.4.2","4.1.1","4.1.1","4.1.1","0.3.0","2.4.1","1.1.0","0.5.1.1","1.5.3","1.6.1","1.4.2","0.1.4","1.7.2","1.33","1.2.0","0.10.1","1.0.0","1.7.10","2.0.1","1.1","4.1.1","0.11","0.1.8","0.5.0","1.6.2","2.0.3","1.2.0.1","0.3.4","2.5.0","1.0.7","2.0.0","1.3.1","2.0.0","0.4.11","2.9","2.0.2","0.13","1.0.1","0.4.0","1.1.1","1.6.0","4.1.1","1.7.3","1.4.0","3.1.3","1.1.3","1.1.1","1.3.1","4.1.1","0.1.2","1.2.2","4.1.1","0.3.8","2.4.2","0.24","1.3.2","1.8-4","2.2.1"]}]}]}
 </script>
 <!--/html_preserve-->
 </div>

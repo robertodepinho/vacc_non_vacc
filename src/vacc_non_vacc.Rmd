@@ -9,23 +9,16 @@ runtime: shiny_prerendered
 ```{r setup, include=FALSE}
 library(learnr)
 library(tidyverse) #load only needed components?
-library(questionr)
+source("pop_gen.R")
 knitr::opts_chunk$set(echo = FALSE)
 ```
 ```{r general_parameters}
-population_size = 1000
 #TO-DO: percentual vacinado do Brasil
 #TO-DO: Percentual real para vacina selecionada - fully
 vacc_per_init = 27 #initial slider position for percentage of population vaccinated
-
-#refs: https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&smid=tw-nytimes
-#REF: https://www.medrxiv.org/content/10.1101/2021.08.21.21261501v1.full.pdf 
-#Vaxzevria/Fiocruz VE Fully vacc ADJUSTED Table S1
-infected_if_vacc_prob = 0.30 #Probability of being vaccinated and still get covid if exposed enough to get covid unvaccinated.
-
-
 ```
 ```{r server_parameters_init, context="server"}
+population_size = 1000
 point_size = 2
 
 observeEvent(input$vacc_per_a,{
@@ -39,18 +32,12 @@ observeEvent(input$vacc_per_b,{
 })
 
 
-
-
-```
-
-```{r data}
-population = tibble(x = runif(population_size)*99+1, 
-                    y = runif(population_size)*99+1,
-                    infected_if_vacc = sample(x = c(TRUE,FALSE),
-                                              replace = TRUE,
-                                              size = population_size,
-                                              prob = c(infected_if_vacc_prob,1-infected_if_vacc_prob))
-)
+population_outcome <- reactive({
+  vacc_per = input$vacc_per_a
+  return(get_population(population_size = population_size, 
+                 infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+    add_outcomes(vacc_per))
+})
 ```
 
 
@@ -65,9 +52,7 @@ Usando o controle, você pode determinar quantas delas estão vacinadas.
 ```{r plot_vacc_non_vacc, context="server"}
 output$plot_vacc_non_vacc <- renderPlot({
   #TO-DO:Gráfico WAFFLE
-  vacc_per = input$vacc_per_a
-  population %>% 
-    mutate( vacc = x <= vacc_per) %>%
+  population_outcome() %>% 
     ggplot(aes(x=x, y=y, color = vacc)) +
     geom_point(size = point_size) +
     theme_minimal()
@@ -86,10 +71,7 @@ Mesmo com vacina, pode ter covid..... no gráfico abaixo, as pessoas com covid e
 ```{r plot_vacc_non_vacc_covid, context="server"}
 output$plot_vacc_non_vacc_covid <- renderPlot({
   #TO-DO:Gráfico WAFFLE Padronizado
-  vacc_per = input$vacc_per_a
-  population %>%
-    mutate( vacc = x <= vacc_per, 
-            infected = (!vacc | infected_if_vacc)) %>%  #infected, if not vacc or if vacc but still in prob.
+  population_outcome() %>%
     ggplot(aes(x=x, y=y, 
                color = vacc, #color indicates vaccinated or not - change
                alpha = infected)) +
@@ -111,34 +93,29 @@ output$plot_covid_only <- renderPlot({
   #TO-DO:Arrumar em barras
   #TO-DO:Gráfico WAFFLE Padronizado
   #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
-  vacc_per = input$vacc_per_a
-  population_size = nrow(population)
+   
+  #population_size = nrow(pop_outcome)
   
   points_dist = 100/sqrt(population_size) #target mean distance between points
   
-  infected_population <- population %>%
-    mutate( vacc = x <= vacc_per, 
-            infected = (!vacc | infected_if_vacc)) %>% #infected, if not vacc or if vacc but still in prob.
+  pop_infected <- population_outcome() %>%
     filter(infected)
   
-  vacc_infected_n <- infected_population %>% group_by(vacc) %>%
+  vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
     summarise(n = n())
   
   #heights X widths
   #choose column width so that the higher group reaches the top 
   number_of_cols = max(3,max(vacc_infected_n$n / sqrt(population_size))) # in columns
   col_width_dist = number_of_cols * points_dist
-  infected_population %>%
+  
+  pop_infected %>%
     group_by(vacc) %>%
     mutate( x_bar = runif(n()) * col_width_dist  - vacc*col_width_dist,
             y_bar = runif(n()) * n()/number_of_cols * points_dist) %>%
     ungroup() %>%
-    
-    
     ggplot(aes(x=x_bar, y=y_bar, 
-               color = vacc #color indicates vaccinated or not - change
-               
-    )) +
+               color = vacc )) +  #color indicates vaccinated or not - change
     geom_point(size = point_size) + #TO-DO: adjust size? 
     theme_minimal()
   
