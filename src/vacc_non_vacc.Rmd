@@ -81,7 +81,7 @@ sliderInput("vacc_per_a", "Percentual vacinado da população:", min = 0, max = 
 
 
 <!-- #TO-DO:Texto explicando que mesmo com vacina pode covid -->
-Mesmo com vacina, pode ter covid..... no gráfico abaixo, as pessoas com covid estão marcadas XYZ. Como nesta simulação partimos do princípio que todas as pessoas foram expostas ao vírus em grau suficiente para infectar alguem não imunizado,  todas as pessoas não vacinadas pegaram covid. Percebam que o espaço das pessoas não vacinadas está bem mais cheio de infectados, mas também vemos casos entre as vacinadas.     
+Mesmo com vacina, pode ter covid..... no gráfico abaixo, as pessoas com covid estão marcadas XYZ. Nesta simulação, todas as pessoas foram expostas ao vírus o suficiente para infectar-se.  Assim, todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. O espaço das pessoas não vacinadas está bem mais cheio de infectados.  No entanto,  também vemos casos entre as vacinadas.     
 
 ```{r plot_vacc_non_vacc_covid, context="server"}
 output$plot_vacc_non_vacc_covid <- renderPlot({
