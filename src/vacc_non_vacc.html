@@ -119,25 +119,27 @@ $(document).ready(function () {
 <!-- A fazer: marcados com TO-DO -->
 <div id="section-com-vacina-sem-vacina-e-covid-19" class="section level2">
 <h2>Com vacina, sem vacina e covid-19</h2>
-<p>Cada elemento no gráfico abaixo representa uma pessoa. Todas elas foram expostas ao vírus tempo suficiente para se infectar caso não tenham tomado a vacina.</p>
-<p>Usando o controle, você pode determinar quantas delas estão vacinadas.</p>
+<p>Cada elemento no gráfico abaixo representa uma pessoa. Usando o controle, você pode determinar quantas delas estão vacinadas.</p>
 <p><div id="plot_vacc_non_vacc" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_a-label" for="vacc_per_a">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_a" data-skin="shiny" data-min="0" data-max="100" data-from="27" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
 <!-- #TO-DO:Texto explicando que mesmo com vacina pode covid -->
-<p>Mesmo com vacina, pode ter covid….. no gráfico abaixo, as pessoas com covid estão marcadas XYZ. Nesta simulação, todas as pessoas foram expostas ao vírus o suficiente para infectar-se. Assim, todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. O espaço das pessoas não vacinadas está bem mais cheio de infectados. No entanto, também vemos casos entre as vacinadas.</p>
+<p>Todas essas pessoas foram expostas ao vírus um tempo suficiente para que que uma pessoa não vacinada infecte-se. No gráfico abaixo, as pessoas com covid-19 estão marcadas XYZ.</p>
+<p>Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. O espaço das pessoas não vacinadas está bem mais cheio de infectados. No entanto, também vemos casos entre as vacinadas.</p>
 <p><div id="plot_vacc_non_vacc_covid" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <!-- #TO-DO:Texto Introdução gráfico só com os doentes -->
-<p>Só os doentes / doentes “arrumados” - mostrar percentuais</p>
+<p>Arrumando direitinho somente as pessoas com covid-19, podemos comparar os grupos do vacinados e o grupo dos vacinados. Experimente mover o controle. É possível que a maior parte das pessoas com covid-19 tenha sido vacinada? E 100%? Quando isso acontece?</p>
 <p><div id="plot_covid_only" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_b-label" for="vacc_per_b">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_b" data-skin="shiny" data-min="0" data-max="100" data-from="27" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
-<!-- TO-DO:TEXTO SOBRE percentual, testes com 100%, calculo de equilibrio  -->
-<!-- TO-DO:GRAFICO de percentual de cada população -->
+<p>No gráfico abaixo, arrumamos agora as pessoas com covid-19 junto daquelas sem covid-19. Entre as não vacinadas, todas tem covid. E entre as vacinadas? O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada?</p>
+<!-- TO-DO:GRAFICO de percentual em cada população -->
+<p><div id="plot_vacc_non_vacc_covid_sort" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
+<p>No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.</p>
 </div>
 <div id="section-código-exemplo-a-partir-daqui---apagar-ao-final" class="section level2">
 <h2>Código exemplo a partir daqui - apagar ao final</h2>
@@ -249,9 +251,19 @@ observeEvent(input$vacc_per_b,{
 population_outcome <- reactive({
   vacc_per = input$vacc_per_a
   return(get_population(population_size = population_size, 
-                 infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
-    add_outcomes(vacc_per))
+                        infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+           add_outcomes(vacc_per))
 })
+
+#debug version
+# population_outcome <- function(){
+#   vacc_per = 27
+#   return(get_population(population_size = population_size, 
+#                         infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+#            add_outcomes(vacc_per))
+# }
+
+
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
@@ -282,8 +294,6 @@ output$plot_covid_only <- renderPlot({
   #TO-DO:Arrumar em barras
   #TO-DO:Gráfico WAFFLE Padronizado
   #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
-   
-  #population_size = nrow(pop_outcome)
   
   points_dist = 100/sqrt(population_size) #target mean distance between points
   
@@ -292,6 +302,7 @@ output$plot_covid_only <- renderPlot({
   
   vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
     summarise(n = n())
+  
   
   #heights X widths
   #choose column width so that the higher group reaches the top 
@@ -308,6 +319,90 @@ output$plot_covid_only <- renderPlot({
     geom_point(size = point_size) + #TO-DO: adjust size? 
     theme_minimal()
   
+})
+</script>
+ 
+<script type="application/shiny-prerendered" data-context="server">
+output$plot_vacc_non_vacc_covid_sort <- renderPlot({
+  #TO-DO:Gráfico WAFFLE Padronizado
+  #points_dist = 100/sqrt(population_size) #target mean distance between points
+  
+  #pop_infected <- population_outcome() %>%
+  #  filter(infected)
+  #vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
+  #  summarise(n = n())
+  #max_xy_vacc = sqrt(vacc_infected_n$n) * points_dist
+  #print(max_xy_vacc)
+  
+  get_bar_vacc_inf <- function(n, vacc_per, prob) {
+    # x1 = vacc_per * (1-prob) / 2
+    # x2 = vacc_per - x1
+    # y1 = 100 * (1-prob) / 2
+    # y2 = 100 - y1
+    x_len = vacc_per * sqrt(prob)
+    x1 = (vacc_per-x_len)/2
+    x2 = x1 + x_len
+    y_len =  100 * sqrt(prob)
+    y1 = (100-y_len)/2
+    y2 = y1 + y_len
+    
+    return(tibble(x_bar = runif(n)*x_len + x1,
+                  y_bar = runif(n)*y_len + y1))
+  }
+  
+  get_bar_vacc_n_inf <- function(n, vacc_per, prob) {
+    x_len = vacc_per * sqrt(prob)
+    x1 = (vacc_per-x_len)/2
+    x2 = x1 + x_len
+    y_len =  100 * sqrt(prob)
+    y1 = (100-y_len)/2
+    y2 = y1 + y_len
+    
+    bar <- tibble(x_bar = runif(n)*vacc_per,
+                  y_bar = runif(n)*100) %>%
+      mutate(invalid = x_bar > x1 & x_bar < x2 & y_bar > y1 & y_bar < y2)
+    while(nrow(bar %>% filter(invalid))){
+      bar <- bar %>%
+        mutate(x_bar = ifelse(invalid, runif(n)*vacc_per,x_bar),
+               y_bar = ifelse(invalid, runif(n)*100, y_bar)) %>%
+        mutate(invalid =  x_bar > x1 & x_bar < x2 & y_bar > y1 & y_bar < y2)
+    }
+    
+    #tibble(x_bar = runif(n)*vacc_per,
+    #       y_bar = runif(n)*100) %>%
+    #mutate(x_bar = ifelse(x_bar>x1, x_bar + (x2-x1), x_bar),
+    #       y_bar = ifelse(y_bar>y1, y_bar + (y2-y1), y_bar)) %>%
+    return(bar)
+  }
+  
+  
+  model = get_infected_2_death_model()
+  summ_pop <- population_outcome() %>% 
+    group_by(vacc, infected) %>%
+    summarise(n = n())
+  
+  vacc_per = input$vacc_per_a
+  bar_vacc_inf = get_bar_vacc_inf(n = (summ_pop %>% filter (vacc,infected))$n,
+                                  vacc_per = vacc_per, 
+                                  prob = model[["infected_if_vacc_prob"]]) 
+  bar_vacc_n_inf = get_bar_vacc_n_inf(n = (summ_pop %>% filter (vacc,!infected))$n,
+                                      vacc_per = vacc_per, 
+                                      prob = model[["infected_if_vacc_prob"]]) 
+  
+  
+  population_outcome() %>%
+    mutate(x_bar = x, y_bar = y) %>% 
+    group_by(vacc, infected) %>%
+    mutate( x_bar = ifelse(vacc & infected, bar_vacc_inf$x_bar, x_bar),
+            y_bar = ifelse(vacc & infected, bar_vacc_inf$y_bar, y_bar)) %>%
+    mutate( x_bar = ifelse(vacc & !infected, bar_vacc_n_inf$x_bar, x_bar),
+            y_bar = ifelse(vacc & !infected, bar_vacc_n_inf$y_bar, y_bar)) %>%
+    ungroup() %>%
+    ggplot(aes(x=x_bar, y=y_bar, 
+               color = vacc, #color indicates vaccinated or not - change
+               alpha = infected)) +
+    geom_point(size = point_size) +
+    theme_minimal()
 })
 </script>
  
@@ -363,11 +458,11 @@ output$`tutorial-exercise-print-limit-output` <- renderUI({
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::question_prerendered_chunk(structure(list(type = "learnr_radio", label = "quiz-1", question = structure("Which package contains functions for installing other R packages?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_396dd5d",     option = "base", value = "base", label = structure("base", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_6d6b388",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_72b011a",     option = "utils", value = "utils", label = structure("utils", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_2241b38",     option = "codetools", value = "codetools", label = structure("codetools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-1-answer", question = "quiz-1"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich package contains functions for installing other R packages?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 1924081174.10403, options = list()), class = c("learnr_radio", "tutorial_question")))
+learnr:::question_prerendered_chunk(structure(list(type = "learnr_radio", label = "quiz-1", question = structure("Which package contains functions for installing other R packages?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_c5602fd",     option = "base", value = "base", label = structure("base", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_5c264c6",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_ab0da3",     option = "utils", value = "utils", label = structure("utils", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_132f96",     option = "codetools", value = "codetools", label = structure("codetools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-1-answer", question = "quiz-1"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich package contains functions for installing other R packages?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 197471724.908045, options = list()), class = c("learnr_radio", "tutorial_question")))
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", label = "quiz-2", question = structure("Which of the R packages listed below are used to create plots?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_d3dcb36",     option = "lattice", value = "lattice", label = structure("lattice", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_83ef423",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_9011e9b",     option = "stats", value = "stats", label = structure("stats", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_f983fdf",     option = "grid", value = "grid", label = structure("grid", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-2-answer", question = "quiz-2"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich of the R packages listed below are used to create plots?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 1275558698.40602, options = list()), class = c("learnr_checkbox", "tutorial_question")))
+learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", label = "quiz-2", question = structure("Which of the R packages listed below are used to create plots?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_a230d45",     option = "lattice", value = "lattice", label = structure("lattice", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_4c6f8a7",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_fde2c9c",     option = "stats", value = "stats", label = structure("stats", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_6331955",     option = "grid", value = "grid", label = structure("grid", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-2-answer", question = "quiz-2"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich of the R packages listed below are used to create plots?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 266798240.375762, options = list()), class = c("learnr_checkbox", "tutorial_question")))
 </script>
  <!--html_preserve-->
 <script type="application/shiny-prerendered" data-context="dependencies">

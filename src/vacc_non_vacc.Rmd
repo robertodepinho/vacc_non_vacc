@@ -12,7 +12,7 @@ library(tidyverse) #load only needed components?
 source("pop_gen.R")
 knitr::opts_chunk$set(echo = FALSE)
 ```
-```{r general_parameters}
+```{r client_parameters}
 #TO-DO: percentual vacinado do Brasil
 #TO-DO: Percentual real para vacina selecionada - fully
 vacc_per_init = 27 #initial slider position for percentage of population vaccinated
@@ -35,18 +35,24 @@ observeEvent(input$vacc_per_b,{
 population_outcome <- reactive({
   vacc_per = input$vacc_per_a
   return(get_population(population_size = population_size, 
-                 infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
-    add_outcomes(vacc_per))
+                        infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+           add_outcomes(vacc_per))
 })
+
+#debug version
+# population_outcome <- function(){
+#   vacc_per = 27
+#   return(get_population(population_size = population_size, 
+#                         infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+#            add_outcomes(vacc_per))
+# }
+
+
 ```
-
-
 
 ## Com vacina, sem vacina e covid-19
 
-Cada elemento no gráfico abaixo representa uma pessoa. Todas elas foram expostas ao vírus tempo suficiente para se infectar caso não tenham tomado a vacina.
-
-Usando o controle, você pode determinar quantas delas estão vacinadas.
+Cada elemento no gráfico abaixo representa uma pessoa. Usando o controle, você pode determinar quantas delas estão vacinadas.
 
 
 ```{r plot_vacc_non_vacc, context="server"}
@@ -66,7 +72,9 @@ sliderInput("vacc_per_a", "Percentual vacinado da população:", min = 0, max = 
 
 
 <!-- #TO-DO:Texto explicando que mesmo com vacina pode covid -->
-Mesmo com vacina, pode ter covid..... no gráfico abaixo, as pessoas com covid estão marcadas XYZ. Nesta simulação, todas as pessoas foram expostas ao vírus o suficiente para infectar-se.  Assim, todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. O espaço das pessoas não vacinadas está bem mais cheio de infectados.  No entanto,  também vemos casos entre as vacinadas.     
+Todas essas pessoas foram expostas ao vírus um tempo suficiente para que que uma pessoa não vacinada infecte-se. No gráfico abaixo, as pessoas com covid-19 estão marcadas XYZ. 
+
+Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. O espaço das pessoas não vacinadas está bem mais cheio de infectados.  No entanto,  também vemos casos entre as vacinadas. 
 
 ```{r plot_vacc_non_vacc_covid, context="server"}
 output$plot_vacc_non_vacc_covid <- renderPlot({
@@ -85,7 +93,7 @@ plotOutput("plot_vacc_non_vacc_covid")
 
 
 <!-- #TO-DO:Texto Introdução gráfico só com os doentes -->
-Só os doentes / doentes "arrumados" - mostrar percentuais
+Arrumando direitinho somente as pessoas com covid-19, podemos comparar os grupos do vacinados e o grupo dos vacinados. Experimente mover o controle. É possível que a maior parte das pessoas com covid-19 tenha sido vacinada? E 100%? Quando isso acontece?   
 
 
 ```{r plot_covid_only, context="server"}
@@ -93,8 +101,6 @@ output$plot_covid_only <- renderPlot({
   #TO-DO:Arrumar em barras
   #TO-DO:Gráfico WAFFLE Padronizado
   #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
-   
-  #population_size = nrow(pop_outcome)
   
   points_dist = 100/sqrt(population_size) #target mean distance between points
   
@@ -103,6 +109,7 @@ output$plot_covid_only <- renderPlot({
   
   vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
     summarise(n = n())
+  
   
   #heights X widths
   #choose column width so that the higher group reaches the top 
@@ -126,9 +133,89 @@ plotOutput("plot_covid_only")
 sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 
-<!-- TO-DO:TEXTO SOBRE percentual, testes com 100%, calculo de equilibrio  -->
+No gráfico abaixo, arrumamos agora as pessoas com covid-19 junto daquelas sem covid-19. Entre as não vacinadas, todas tem covid. E entre as vacinadas? O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada? 
 
-<!-- TO-DO:GRAFICO de percentual de cada população -->
+<!-- TO-DO:GRAFICO de percentual em cada população -->
+```{r plot_vacc_non_vacc_covid_sort, context="server"}
+output$plot_vacc_non_vacc_covid_sort <- renderPlot({
+  #TO-DO:Gráfico WAFFLE Padronizado
+  #points_dist = 100/sqrt(population_size) #target mean distance between points
+  
+  #pop_infected <- population_outcome() %>%
+  #  filter(infected)
+  #vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
+  #  summarise(n = n())
+  #max_xy_vacc = sqrt(vacc_infected_n$n) * points_dist
+  #print(max_xy_vacc)
+  
+  get_bar_vacc_inf <- function(n, vacc_per, prob) {
+    x_len = vacc_per * sqrt(prob)
+    x1 = (vacc_per-x_len)/2
+    x2 = x1 + x_len
+    y_len =  100 * sqrt(prob)
+    y1 = (100-y_len)/2
+    y2 = y1 + y_len
+    
+    return(tibble(x_bar = runif(n)*x_len + x1,
+                  y_bar = runif(n)*y_len + y1))
+  }
+  
+  get_bar_vacc_n_inf <- function(n, vacc_per, prob) {
+    x_len = vacc_per * sqrt(prob)
+    x1 = (vacc_per-x_len)/2
+    x2 = x1 + x_len
+    y_len =  100 * sqrt(prob)
+    y1 = (100-y_len)/2
+    y2 = y1 + y_len
+    
+    bar <- tibble(x_bar = runif(n)*vacc_per,
+                  y_bar = runif(n)*100) %>%
+      mutate(invalid = x_bar > x1 & x_bar < x2 & y_bar > y1 & y_bar < y2)
+    while(nrow(bar %>% filter(invalid))){
+      bar <- bar %>%
+        mutate(x_bar = ifelse(invalid, runif(n)*vacc_per,x_bar),
+               y_bar = ifelse(invalid, runif(n)*100, y_bar)) %>%
+        mutate(invalid =  x_bar > x1 & x_bar < x2 & y_bar > y1 & y_bar < y2)
+    }
+    return(bar)
+  }
+  
+  
+  model = get_infected_2_death_model()
+  summ_pop <- population_outcome() %>% 
+    group_by(vacc, infected) %>%
+    summarise(n = n())
+  
+  vacc_per = input$vacc_per_a
+  bar_vacc_inf = get_bar_vacc_inf(n = (summ_pop %>% filter (vacc,infected))$n,
+                                  vacc_per = vacc_per, 
+                                  prob = model[["infected_if_vacc_prob"]]) 
+  bar_vacc_n_inf = get_bar_vacc_n_inf(n = (summ_pop %>% filter (vacc,!infected))$n,
+                                      vacc_per = vacc_per, 
+                                      prob = model[["infected_if_vacc_prob"]]) 
+  
+  
+  population_outcome() %>%
+    mutate(x_bar = x, y_bar = y) %>% 
+    group_by(vacc, infected) %>%
+    mutate( x_bar = ifelse(vacc & infected, bar_vacc_inf$x_bar, x_bar),
+            y_bar = ifelse(vacc & infected, bar_vacc_inf$y_bar, y_bar)) %>%
+    mutate( x_bar = ifelse(vacc & !infected, bar_vacc_n_inf$x_bar, x_bar),
+            y_bar = ifelse(vacc & !infected, bar_vacc_n_inf$y_bar, y_bar)) %>%
+    ungroup() %>%
+    ggplot(aes(x=x_bar, y=y_bar, 
+               color = vacc, #color indicates vaccinated or not - change
+               alpha = infected)) +
+    geom_point(size = point_size) +
+    theme_minimal()
+})
+```
+```{r vacc_non_vacc_covid_sort, echo=FALSE}
+plotOutput("plot_vacc_non_vacc_covid_sort")
+```
+
+
+No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.  
 
 ## Código exemplo a partir daqui - apagar ao final
 

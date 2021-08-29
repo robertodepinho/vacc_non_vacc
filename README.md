@@ -22,3 +22,7 @@ To do list:
     - [ ] c.3 mover código e funções para scripts proprios
     - [X] c.4 duplicatas dos sliders
 - [ ] Redação dos textos
+  - [ ] a) créditos
+  - [ ] b) validar texto
+  
+
