@@ -92,11 +92,30 @@ output$plot_vacc_non_vacc_covid <- renderPlot({
       color = infected,
       fill = outcome), 
       size = point_size) +
-    #geom_point(size = point_size, color = "black", shape = 10) +
-    scale_shape_manual(values = c(24,25), breaks = c(T,F)) +
-    scale_fill_manual(values = c("black", "green","grey","grey"), breaks = c("death", "hosp","infected", "none"))+
-    scale_color_manual(values = c("red","grey"), breaks = c(T,F))+
-    theme_void()
+    scale_shape_manual(values = c(24,25), 
+                       breaks = c(T,F),
+                       labels = c("Vacinada","Não vacinada")) +
+    
+    scale_fill_manual(values = c("black", "green","grey","grey"), 
+                      breaks = c("death", "hosp","infected", "none"),
+                      labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
+    
+    scale_color_manual(values = c("red","grey"), 
+                       breaks = c(T,F),
+                       labels = c("Infectada", "Não infectada"))+
+    theme_void() + theme(legend.position="bottom", 
+                         legend.title = element_blank()) + 
+    # guides(color = guide_legend(override.aes = list(shape = 25, 
+    #                                                 fill = "grey"),
+    #                             nrow=2,byrow=TRUE)) + 
+    guides(color = FALSE) + 
+    guides(shape = guide_legend(override.aes = list(fill = "grey", 
+                                                    color = c("grey","red")),
+                                nrow=2,byrow=TRUE)) +
+    guides(fill  = guide_legend(override.aes = list(shape = 25, 
+                                                    color=c(rep("red",3),"grey")),   
+                                nrow=2,byrow=TRUE)) 
+  
 })
 ```
 ```{r vacc_non_vacc_covid, echo=FALSE}
