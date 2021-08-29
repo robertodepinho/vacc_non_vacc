@@ -42,7 +42,7 @@ population_outcome <- reactive({
 #debug version
 # population_outcome <- function(){
 #   vacc_per = 27
-#   return(get_population(population_size = population_size, 
+#   return(get_population(population_size = population_size,
 #                         infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
 #            add_outcomes(vacc_per))
 # }
@@ -79,12 +79,24 @@ Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacin
 ```{r plot_vacc_non_vacc_covid, context="server"}
 output$plot_vacc_non_vacc_covid <- renderPlot({
   #TO-DO:Gráfico WAFFLE Padronizado
+  #TO-DO:Temporário - remover outros outcomes. 
+  
   population_outcome() %>%
-    ggplot(aes(x=x, y=y, 
-               color = vacc, #color indicates vaccinated or not - change
-               alpha = infected)) +
-    geom_point(size = point_size) +
-    theme_minimal()
+    mutate( outcome = case_when(death==T ~ "death",
+                                hosp==T ~ "hosp",
+                                infected==T ~ "infected",
+                                TRUE ~"none") ) %>%
+    ggplot(aes(x=x, y=y))+  
+    geom_point(aes(
+      shape = vacc, 
+      color = infected,
+      fill = outcome), 
+      size = point_size) +
+    #geom_point(size = point_size, color = "black", shape = 10) +
+    scale_shape_manual(values = c(24,25), breaks = c(T,F)) +
+    scale_fill_manual(values = c("black", "green","grey","grey"), breaks = c("death", "hosp","infected", "none"))+
+    scale_color_manual(values = c("red","grey"), breaks = c(T,F))+
+    theme_void()
 })
 ```
 ```{r vacc_non_vacc_covid, echo=FALSE}
