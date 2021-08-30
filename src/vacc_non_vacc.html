@@ -234,8 +234,8 @@ session$onSessionEnded(function() {
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-population_size = 1000
-point_size = 2
+population_size = 1024
+point_size = 3
 
 observeEvent(input$vacc_per_a,{
   if(input$vacc_per_a !=input$vacc_per_b)
@@ -255,13 +255,7 @@ population_outcome <- reactive({
            add_outcomes(vacc_per))
 })
 
-#debug version
-# population_outcome <- function(){
-#   vacc_per = 27
-#   return(get_population(population_size = population_size,
-#                         infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
-#            add_outcomes(vacc_per))
-# }
+
 
 
 </script>
@@ -281,25 +275,69 @@ output$plot_vacc_non_vacc <- renderPlot({
 output$plot_vacc_non_vacc_covid <- renderPlot({
   #TO-DO:Gráfico WAFFLE Padronizado
   #TO-DO:Temporário - remover outros outcomes. 
+  debug <- function(){
+  ##debug version
+  library(tidyverse) #load only needed components?
+  source("src/pop_gen.R")
+  population_size = 1024
+  point_size = 4.5
+  
+  population_outcome <- function(){
+    vacc_per = 50
+    return(get_population(population_size = population_size,
+                          infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+             add_outcomes(vacc_per))
+  }
+  
+}
+  
+  
+  
+  shape_vacc = 23
+  shape_n_vacc = 25
+  shape_guide = 22
+  
+  person_color = "grey"
+  death_color = "black"
+  hosp_color = "green"
+  covid_color = "red"
+  border_color = "black"
   
   population_outcome() %>%
-    mutate( outcome = case_when(death==T ~ "death",
-                                hosp==T ~ "hosp",
-                                infected==T ~ "infected",
-                                TRUE ~"none") ) %>%
-    ggplot(aes(x=x, y=y))+  
+    add_neat_x_y() %>%
+    ggplot(aes(x=x_neat, y=y_neat))+  
     geom_point(aes(
       shape = vacc, 
       color = infected,
       fill = outcome), 
       size = point_size) +
-    #geom_point(size = point_size, color = "black", shape = 10) +
-    scale_shape_manual(values = c(24,25), breaks = c(T,F)) +
-    scale_fill_manual(values = c("black", "green","grey","grey"), breaks = c("death", "hosp","infected", "none"))+
-    scale_color_manual(values = c("red","grey"), breaks = c(T,F))+
-    theme_void() + theme(legend.position="bottom") + 
-    guides(fill = guide_legend(override.aes = list(shape = 25))) +
-    guides(color = guide_legend(override.aes = list(shape = 25)))
+    scale_shape_manual(values = c(shape_vacc,shape_n_vacc), 
+                       breaks = c(T,F),
+                       labels = c("Vacinada","Não vacinada")) +
+    
+    scale_fill_manual(values = c(death_color, hosp_color,person_color,person_color), 
+                      breaks = c("death", "hosp","infected", "none"),
+                      labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
+    
+    scale_color_manual(values = c(covid_color,border_color), 
+                       breaks = c(T,F),
+                       labels = c("Infectada", "Não infectada"))+
+    theme_void() + theme(legend.position="bottom", 
+                         legend.title = element_blank()) + 
+    # guides(color = guide_legend(override.aes = list(shape = 25, 
+    #                                                 fill = "grey"),
+    #                             nrow=2,byrow=TRUE)) + 
+    guides(color = "none") + 
+    guides(shape = guide_legend(override.aes = list(fill = person_color, 
+                                                    color = border_color),
+                                nrow=2,byrow=TRUE)) +
+    guides(fill  = guide_legend(override.aes = list(shape = shape_guide, 
+                                                    color=c(covid_color,
+                                                            covid_color,
+                                                            covid_color,
+                                                            border_color)),   
+                                nrow=2,byrow=TRUE)) 
+  
 })
 </script>
  
@@ -463,11 +501,11 @@ output$`tutorial-exercise-print-limit-output` <- renderUI({
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::question_prerendered_chunk(structure(list(type = "learnr_radio", label = "quiz-1", question = structure("Which package contains functions for installing other R packages?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_d9a8d87",     option = "base", value = "base", label = structure("base", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_4acb4f3",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_4a0c8d5",     option = "utils", value = "utils", label = structure("utils", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_803da13",     option = "codetools", value = "codetools", label = structure("codetools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-1-answer", question = "quiz-1"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich package contains functions for installing other R packages?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 783960966.13494, options = list()), class = c("learnr_radio", "tutorial_question")))
+learnr:::question_prerendered_chunk(structure(list(type = "learnr_radio", label = "quiz-1", question = structure("Which package contains functions for installing other R packages?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_644248b",     option = "base", value = "base", label = structure("base", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_afd34a6",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_b373974",     option = "utils", value = "utils", label = structure("utils", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_7ad856f",     option = "codetools", value = "codetools", label = structure("codetools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-1-answer", question = "quiz-1"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich package contains functions for installing other R packages?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 621680854.710507, options = list()), class = c("learnr_radio", "tutorial_question")))
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", label = "quiz-2", question = structure("Which of the R packages listed below are used to create plots?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_19712cd",     option = "lattice", value = "lattice", label = structure("lattice", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_cad63f4",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_5c4f188",     option = "stats", value = "stats", label = structure("stats", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_19c1954",     option = "grid", value = "grid", label = structure("grid", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-2-answer", question = "quiz-2"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich of the R packages listed below are used to create plots?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 646518860.698941, options = list()), class = c("learnr_checkbox", "tutorial_question")))
+learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", label = "quiz-2", question = structure("Which of the R packages listed below are used to create plots?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_c95db89",     option = "lattice", value = "lattice", label = structure("lattice", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_d6efe4c",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_634b36b",     option = "stats", value = "stats", label = structure("stats", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_b6e2148",     option = "grid", value = "grid", label = structure("grid", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-2-answer", question = "quiz-2"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich of the R packages listed below are used to create plots?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 320122029.350932, options = list()), class = c("learnr_checkbox", "tutorial_question")))
 </script>
  <!--html_preserve-->
 <script type="application/shiny-prerendered" data-context="dependencies">

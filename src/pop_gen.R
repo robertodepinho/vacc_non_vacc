@@ -55,34 +55,53 @@ get_infected_2_death_model <- function() {
   
 }
 
+
 #add outcomes
 add_outcomes <- function(population, vacc_per){
   model = get_infected_2_death_model()
   population_size = nrow(population)
   return(population %>% 
-    mutate( vacc = x <= vacc_per,                  #vaccinated if x <= percentage of population vaccinated
-            infected = (!vacc | infected_if_vacc), #infected if not vaccinated or based on coin toss on VE. 
-            
-            #hosp/icu/death if infected & based on vacc, non vacc respective probability
-            hosp = infected & ifelse(vacc, 
-                                     coin_toss(size = population_size,
-                                               prob = c(model[["hosp_if_vacc_prob"]],
-                                                        1-model[["hosp_if_vacc_prob"]])),
-                                     coin_toss(size = population_size,
-                                               prob = c(model[["hosp_if_infected_prob"]],
-                                                        1-model[["hosp_if_infected_prob"]]))),
-            icu = infected & ifelse(vacc, 
-                                    coin_toss(size = population_size,
-                                              prob = c(model[["icu_if_vacc_prob"]],
-                                                       1-model[["icu_if_vacc_prob"]])),
-                                    coin_toss(size = population_size,
-                                              prob = c(model[["icu_if_infected_prob"]],
-                                                       1-model[["icu_if_infected_prob"]]))),
-            death = infected & ifelse(vacc, 
-                                      coin_toss(size = population_size,
-                                                prob = c(model[["death_if_vacc_prob"]],
-                                                         1-model[["death_if_vacc_prob"]])),
-                                      coin_toss(size = population_size,
-                                                prob = c(model[["death_if_infected_prob"]],
-                                                         1-model[["death_if_infected_prob"]])))))
+           mutate( vacc = x <= vacc_per,                  #vaccinated if x <= percentage of population vaccinated
+                   infected = (!vacc | infected_if_vacc), #infected if not vaccinated or based on coin toss on VE. 
+                   
+                   #hosp/icu/death if infected & based on vacc, non vacc respective probability
+                   hosp = infected & ifelse(vacc, 
+                                            coin_toss(size = population_size,
+                                                      prob = c(model[["hosp_if_vacc_prob"]],
+                                                               1-model[["hosp_if_vacc_prob"]])),
+                                            coin_toss(size = population_size,
+                                                      prob = c(model[["hosp_if_infected_prob"]],
+                                                               1-model[["hosp_if_infected_prob"]]))),
+                   icu = infected & ifelse(vacc, 
+                                           coin_toss(size = population_size,
+                                                     prob = c(model[["icu_if_vacc_prob"]],
+                                                              1-model[["icu_if_vacc_prob"]])),
+                                           coin_toss(size = population_size,
+                                                     prob = c(model[["icu_if_infected_prob"]],
+                                                              1-model[["icu_if_infected_prob"]]))),
+                   death = infected & ifelse(vacc, 
+                                             coin_toss(size = population_size,
+                                                       prob = c(model[["death_if_vacc_prob"]],
+                                                                1-model[["death_if_vacc_prob"]])),
+                                             coin_toss(size = population_size,
+                                                       prob = c(model[["death_if_infected_prob"]],
+                                                                1-model[["death_if_infected_prob"]])))) %>% 
+           mutate( outcome = case_when(death==T ~ "death",
+                                       hosp==T ~ "hosp",
+                                       infected==T ~ "infected",
+                                       TRUE ~"none") ) 
+  )
+}
+
+#add arrange neatly
+add_neat_x_y <- function(population, vacc_per){
+  population_size = nrow(population)
+  points_dist = 100/sqrt(population_size) 
+  points_per_col = round(sqrt(population_size))  
+  return(population %>%
+           arrange(desc(vacc), desc(outcome)) %>%
+           mutate(rn = row_number(), 
+                  x_neat = points_dist * (floor((row_number()-1) / points_per_col)),
+                  y_neat = points_dist * ((row_number()-1) %% points_per_col))
+  )
 }

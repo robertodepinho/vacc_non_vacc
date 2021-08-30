@@ -18,8 +18,8 @@ knitr::opts_chunk$set(echo = FALSE)
 vacc_per_init = 27 #initial slider position for percentage of population vaccinated
 ```
 ```{r server_parameters_init, context="server"}
-population_size = 1000
-point_size = 2
+population_size = 1024
+point_size = 3
 
 observeEvent(input$vacc_per_a,{
   if(input$vacc_per_a !=input$vacc_per_b)
@@ -39,13 +39,7 @@ population_outcome <- reactive({
            add_outcomes(vacc_per))
 })
 
-#debug version
-# population_outcome <- function(){
-#   vacc_per = 27
-#   return(get_population(population_size = population_size,
-#                         infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
-#            add_outcomes(vacc_per))
-# }
+
 
 
 ```
@@ -80,40 +74,68 @@ Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacin
 output$plot_vacc_non_vacc_covid <- renderPlot({
   #TO-DO:Gráfico WAFFLE Padronizado
   #TO-DO:Temporário - remover outros outcomes. 
+  debug <- function(){
+    ##debug version
+    library(tidyverse) #load only needed components?
+    source("src/pop_gen.R")
+    population_size = 1024
+    point_size = 4.5
+    
+    population_outcome <- function(){
+      vacc_per = 50
+      return(get_population(population_size = population_size,
+                            infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+               add_outcomes(vacc_per))
+    }
+    
+  }
+  
+  
+  
+  shape_vacc = 23
+  shape_n_vacc = 25
+  shape_guide = 22
+  
+  person_color = "grey"
+  death_color = "black"
+  hosp_color = "green"
+  covid_color = "red"
+  border_color = "black"
   
   population_outcome() %>%
-    mutate( outcome = case_when(death==T ~ "death",
-                                hosp==T ~ "hosp",
-                                infected==T ~ "infected",
-                                TRUE ~"none") ) %>%
-    ggplot(aes(x=x, y=y))+  
+    add_neat_x_y() %>%
+    ggplot(aes(x=x_neat, y=y_neat))+  
     geom_point(aes(
       shape = vacc, 
       color = infected,
       fill = outcome), 
       size = point_size) +
-    scale_shape_manual(values = c(24,25), 
+    scale_shape_manual(name = "Vacina",
+                       values = c(shape_vacc,shape_n_vacc), 
                        breaks = c(T,F),
                        labels = c("Vacinada","Não vacinada")) +
     
-    scale_fill_manual(values = c("black", "green","grey","grey"), 
+    scale_fill_manual(name = "Resultado",
+                      values = c(death_color, hosp_color,person_color,person_color), 
                       breaks = c("death", "hosp","infected", "none"),
                       labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
     
-    scale_color_manual(values = c("red","grey"), 
+    scale_color_manual(values = c(covid_color,border_color), 
                        breaks = c(T,F),
                        labels = c("Infectada", "Não infectada"))+
-    theme_void() + theme(legend.position="bottom", 
-                         legend.title = element_blank()) + 
+    theme_void() + theme(legend.position="bottom") + 
     # guides(color = guide_legend(override.aes = list(shape = 25, 
     #                                                 fill = "grey"),
     #                             nrow=2,byrow=TRUE)) + 
-    guides(color = FALSE) + 
-    guides(shape = guide_legend(override.aes = list(fill = "grey", 
-                                                    color = c("grey","red")),
+    guides(color = "none") + 
+    guides(shape = guide_legend(override.aes = list(fill = person_color, 
+                                                    color = border_color),
                                 nrow=2,byrow=TRUE)) +
-    guides(fill  = guide_legend(override.aes = list(shape = 25, 
-                                                    color=c(rep("red",3),"grey")),   
+    guides(fill  = guide_legend(override.aes = list(shape = shape_guide, 
+                                                    color=c(covid_color,
+                                                            covid_color,
+                                                            covid_color,
+                                                            border_color)),   
                                 nrow=2,byrow=TRUE)) 
   
 })
