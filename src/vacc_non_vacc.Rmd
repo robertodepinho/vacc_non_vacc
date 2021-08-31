@@ -17,11 +17,53 @@ knitr::opts_chunk$set(echo = FALSE)
 #TO-DO: percentual vacinado do Brasil
 #TO-DO: Percentual real para vacina selecionada - fully
 vacc_per_init = 27 #initial slider position for percentage of population vaccinated
+
+#DEBUG ONLY - AUX function to run local charts
+debug <- function(){
+  ##debug version
+  library(tidyverse) #load only needed components?
+  source("src/pop_gen.R")
+  population_size = 784
+  point_size = 5
+  shield_size = 7
+  
+  population_outcome <- function(){
+    vacc_per = 50
+    return(get_population(population_size = population_size,
+                          infected_if_vacc_prob =
+                            get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+             add_outcomes(vacc_per)   %>%
+             add_neat_x_y() %>%
+             mutate(label = ifelse(coin_toss(size = population_size, 
+                                             prob = c(0.5,0.5)),
+                                   fontawesome('fa-male'),
+                                   fontawesome('fa-female')))
+           
+           
+    )
+  }
+  
+}
+
 ```
 ```{r server_parameters_init, context="server"}
-population_size = 1024
-point_size = 3
 
+population_size = 784
+
+#viz parameters
+point_size = 5   #glyph size
+shield_size = 7
+
+shape_guide = 22
+
+person_color = "grey"
+death_color = "black"
+hosp_color = "green"
+covid_color = "red"
+shield_color = "black"
+
+
+#slider synch
 observeEvent(input$vacc_per_a,{
   if(input$vacc_per_a !=input$vacc_per_b)
     updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_a)
@@ -32,31 +74,47 @@ observeEvent(input$vacc_per_b,{
     updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b)
 })
 
-
+#gen population by vacc per
 population_outcome <- reactive({
   vacc_per = input$vacc_per_a
   return(get_population(population_size = population_size, 
-                        infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
-           add_outcomes(vacc_per))
+                        infected_if_vacc_prob = 
+                          get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+           add_outcomes(vacc_per) %>%
+           add_neat_x_y() %>%
+           mutate(label = ifelse(coin_toss(size = population_size, 
+                                           prob = c(0.5,0.5)),
+                                 fontawesome('fa-male'),
+                                 fontawesome('fa-female')))
+         
+  )
 })
-
-
-
 
 ```
 
-## Com vacina, sem vacina e covid-19
+## Vacina e covid-19
 
 Cada elemento no gráfico abaixo representa uma pessoa. Usando o controle, você pode determinar quantas delas estão vacinadas.
 
-
+<!-- #PLOT VACC X N VACC -->
 ```{r plot_vacc_non_vacc, context="server"}
 output$plot_vacc_non_vacc <- renderPlot({
-  #TO-DO:Gráfico WAFFLE
   population_outcome() %>% 
-    ggplot(aes(x=x, y=y, color = vacc)) +
-    geom_point(size = point_size) +
-    theme_minimal()
+    ggplot(aes(x=x_neat, y=y_neat))+
+    
+    geom_text(aes(label = label),color = person_color, family = "fontawesome-webfont", 
+              size = point_size, show.legend = FALSE)+
+    geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = shield_color) +
+    
+    scale_alpha_manual(name = element_blank(),
+                       values = c(1,0), 
+                       breaks = c(T,F),
+                       labels = c("Vacina",element_blank())) +
+    guides(alpha  = guide_legend(override.aes = list(color = "black")),   
+           nrow=2, byrow=TRUE) +
+    
+    theme_void() + theme(legend.position="bottom")
+  
   
 })
 ```
@@ -71,82 +129,47 @@ Todas essas pessoas foram expostas ao vírus um tempo suficiente para que que um
 
 Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. O espaço das pessoas não vacinadas está bem mais cheio de infectados.  No entanto,  também vemos casos entre as vacinadas. 
 
+<!-- #PLOT VACC X N VACC X COVID -->
 ```{r plot_vacc_non_vacc_covid, context="server"}
 output$plot_vacc_non_vacc_covid <- renderPlot({
-  #TO-DO:Gráfico WAFFLE Padronizado
-  #TO-DO:Temporário - remover outros outcomes. 
-  debug <- function(){
-    ##debug version
-    library(tidyverse) #load only needed components?
-    source("src/pop_gen.R")
-    population_size = 784
-    point_size = 5
-    shield_size = 7
-    
-    population_outcome <- function(){
-      vacc_per = 50
-      return(get_population(population_size = population_size,
-                            infected_if_vacc_prob = get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
-               add_outcomes(vacc_per))
-    }
-    
-  }
   
-  
-  
-  shape_vacc = 23
-  shape_n_vacc = 25
-  shape_guide = 22
-  
-  person_color = "grey"
-  death_color = "black"
-  hosp_color = "green"
-  covid_color = "red"
-  border_color = "black"
-  
-  population_outcome() %>%
-    add_neat_x_y() %>%
-    mutate(label = ifelse(coin_toss(size = population_size, 
-                                    prob = c(0.5,0.5)),
-                          fontawesome('fa-male'),
-                          fontawesome('fa-female'))) %>%
-    
+  population_outcome() %>% 
     ggplot(aes(x=x_neat, y=y_neat))+
-    geom_point(shape = 1, alpha = 0, size = 1, aes(color = outcome)) +
-    geom_text(aes(color = outcome,label = label),family = "fontawesome-webfont", 
+    
+    
+    geom_point(shape = 1, alpha = 0, size = 1, aes(color = infected)) +
+    geom_text(aes(color = infected,label = label),family = "fontawesome-webfont",
               size = point_size, show.legend = FALSE)+
-    
-    geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = "grey") +
-    
-    scale_color_manual(name = "Resultado",
-                       values = c(death_color, hosp_color,covid_color,person_color), 
-                       breaks = c("death", "hosp","infected", "none"),
-                       labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
-    guides(color  = guide_legend(override.aes = list(shape = shape_guide,
-                                                     fill=c(death_color, hosp_color,
-                                                            covid_color,person_color), 
-                                                     alpha = 1, size = 5),
-                                 nrow=2,byrow=TRUE)) +
 
-    scale_alpha_manual(name = element_blank(),
-                       values = c(1,0), 
-                       breaks = c(T,F),
-                       labels = c("Vacina",element_blank())) +
-    guides(alpha  = guide_legend(override.aes = list(color = "black")),   
-           nrow=2, byrow=TRUE) +
+     geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = shield_color) +
     
-    theme_void() + theme(legend.position="bottom")
+     scale_color_manual(name = "Infecção",
+                        values = c(covid_color,person_color),
+                        breaks = c(T, F),
+                        labels = c("Covid-19","Não Infectada")) +
+     guides(color  = guide_legend(override.aes = list(shape = shape_guide,
+                                                      fill=c(covid_color,person_color),
+                                                      alpha = 1, size = 5))) +
     
+     scale_alpha_manual(name = element_blank(),
+                        values = c(1,0),
+                        breaks = c(T,F),
+                        labels = c("Vacina",element_blank())) +
+     guides(alpha  = guide_legend(override.aes = list(color = "black")),
+            nrow=2, byrow=TRUE) +
     
-    #####scrapbook
-    # geom_text(color = "black",family = "fontawesome-webfont", size = 5, 
-    #           label = fontawesome('fa-shield')  )+
-    # 
-    # scale_color_manual(values = c(covid_color,border_color), 
-    #                    breaks = c(T,F),
-    #                    labels = c("Infectada", "Não infectada"))+
-    # scale_color_manual(values = c(person_color,covid_color), 
-    #                    breaks = c(T,F),
+     theme_void() + theme(legend.position="bottom")
+    
+  
+  #####scrapbook
+  # geom_text(color = "black",family = "fontawesome-webfont", size = 5, 
+  #           label = fontawesome('fa-shield')  )+
+  # 
+  # scale_color_manual(values = c(covid_color,border_color), 
+  #                    breaks = c(T,F),
+  #                    labels = c("Infectada", "Não infectada"))+
+  # scale_color_manual(values = c(person_color,covid_color), 
+  #                    breaks = c(T,F),
   #                    labels = c("Vacinada", "Não vacinada"))+
   #guides(color = "none") + 
   # scale_shape_manual(name = "Vacina",
@@ -157,6 +180,46 @@ output$plot_vacc_non_vacc_covid <- renderPlot({
   #                                                   color = border_color),
   #                               nrow=2,byrow=TRUE)) +
   #   
+  #shape_vacc = 23
+  #shape_n_vacc = 25
+  #points_dist = 100/sqrt(population_size) #target mean distance between points
+  
+  #pop_infected <- population_outcome() %>%
+  #  filter(infected)
+  #vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
+  #  summarise(n = n())
+  #max_xy_vacc = sqrt(vacc_infected_n$n) * points_dist
+  #print(max_xy_vacc)
+  
+  # chart_completo <- function(){
+  #   population_outcome() %>%
+  #     ggplot(aes(x=x_neat, y=y_neat))+
+  #     geom_point(shape = 1, alpha = 0, size = 1, aes(color = outcome)) +
+  #     geom_text(aes(color = outcome,label = label),family = "fontawesome-webfont", 
+  #               size = point_size, show.legend = FALSE)+
+  #     
+  #     geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = "grey") +
+  #     
+  #     scale_color_manual(name = "Resultado",
+  #                        values = c(death_color, hosp_color,covid_color,person_color), 
+  #                        breaks = c("death", "hosp","infected", "none"),
+  #                        labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
+  #     guides(color  = guide_legend(override.aes = list(shape = shape_guide,
+  #                                                      fill=c(death_color, hosp_color,
+  #                                                             covid_color,person_color), 
+  #                                                      alpha = 1, size = 5),
+  #                                  nrow=2,byrow=TRUE)) +
+  #     
+  #     scale_alpha_manual(name = element_blank(),
+  #                        values = c(1,0), 
+  #                        breaks = c(T,F),
+  #                        labels = c("Vacina",element_blank())) +
+  #     guides(alpha  = guide_legend(override.aes = list(color = "black")),   
+  #            nrow=2, byrow=TRUE) +
+  #     
+  #     theme_void() + theme(legend.position="bottom")
+  #   
+  # }
   
 })
 ```
@@ -168,12 +231,11 @@ plotOutput("plot_vacc_non_vacc_covid")
 <!-- #TO-DO:Texto Introdução gráfico só com os doentes -->
 Arrumando direitinho somente as pessoas com covid-19, podemos comparar os grupos do vacinados e o grupo dos vacinados. Experimente mover o controle. É possível que a maior parte das pessoas com covid-19 tenha sido vacinada? E 100%? Quando isso acontece?   
 
-
+<!-- #PLOT COVID BAR -->
 ```{r plot_covid_only, context="server"}
 output$plot_covid_only <- renderPlot({
-  #TO-DO:Arrumar em barras
-  #TO-DO:Gráfico WAFFLE Padronizado
   #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
+  #TO-DO:Neat
   
   points_dist = 100/sqrt(population_size) #target mean distance between points
   
@@ -194,10 +256,29 @@ output$plot_covid_only <- renderPlot({
     mutate( x_bar = runif(n()) * col_width_dist  - vacc*col_width_dist,
             y_bar = runif(n()) * n()/number_of_cols * points_dist) %>%
     ungroup() %>%
-    ggplot(aes(x=x_bar, y=y_bar, 
-               color = vacc )) +  #color indicates vaccinated or not - change
-    geom_point(size = point_size) + #TO-DO: adjust size? 
-    theme_minimal()
+    ggplot(aes(x=x_bar, y=y_bar)) +  
+    geom_point(shape = 1, alpha = 0, size = 1, aes(color = infected)) +
+    geom_text(aes(color = infected,label = label),family = "fontawesome-webfont", 
+              size = point_size, show.legend = FALSE) +
+    
+    geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = shield_color) +
+    
+    scale_color_manual(name = "Infecção",
+                       values = c(covid_color,person_color), 
+                       breaks = c(T, F),
+                       labels = c("Covid-19","Não Infectada")) +
+    guides(color  = guide_legend(override.aes = list(shape = shape_guide,
+                                                     fill=covid_color, 
+                                                     alpha = 1, size = 5))) + 
+    
+    scale_alpha_manual(name = element_blank(),
+                       values = c(1,0), 
+                       breaks = c(T,F),
+                       labels = c("Vacina",element_blank())) +
+    guides(alpha  = guide_legend(override.aes = list(color = "black")),   
+           nrow=2, byrow=TRUE) +
+    
+    theme_void() + theme(legend.position="bottom")
   
 })
 ```
@@ -208,18 +289,11 @@ sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 
 
 No gráfico abaixo, arrumamos agora as pessoas com covid-19 junto daquelas sem covid-19. Entre as não vacinadas, todas tem covid. E entre as vacinadas? O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada? 
 
-<!-- TO-DO:GRAFICO de percentual em cada população -->
+<!-- #PLOT PERC NA POP  -->
 ```{r plot_vacc_non_vacc_covid_sort, context="server"}
 output$plot_vacc_non_vacc_covid_sort <- renderPlot({
   #TO-DO:Gráfico WAFFLE Padronizado
-  #points_dist = 100/sqrt(population_size) #target mean distance between points
-  
-  #pop_infected <- population_outcome() %>%
-  #  filter(infected)
-  #vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
-  #  summarise(n = n())
-  #max_xy_vacc = sqrt(vacc_infected_n$n) * points_dist
-  #print(max_xy_vacc)
+  #TO-DO:GRAFICO de percentual em cada população
   
   get_bar_vacc_inf <- function(n, vacc_per, prob) {
     x_len = vacc_per * sqrt(prob)
@@ -253,7 +327,6 @@ output$plot_vacc_non_vacc_covid_sort <- renderPlot({
     return(bar)
   }
   
-  
   model = get_infected_2_death_model()
   summ_pop <- population_outcome() %>% 
     group_by(vacc, infected) %>%
@@ -276,11 +349,31 @@ output$plot_vacc_non_vacc_covid_sort <- renderPlot({
     mutate( x_bar = ifelse(vacc & !infected, bar_vacc_n_inf$x_bar, x_bar),
             y_bar = ifelse(vacc & !infected, bar_vacc_n_inf$y_bar, y_bar)) %>%
     ungroup() %>%
-    ggplot(aes(x=x_bar, y=y_bar, 
-               color = vacc, #color indicates vaccinated or not - change
-               alpha = infected)) +
-    geom_point(size = point_size) +
-    theme_minimal()
+    ggplot(aes(x=x_bar, y=y_bar)) +
+    
+    geom_point(shape = 1, alpha = 0, size = 1, aes(color = infected)) +
+    geom_text(aes(color = infected,label = label),family = "fontawesome-webfont",
+              size = point_size, show.legend = FALSE)+
+
+     geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = shield_color) +
+    
+     scale_color_manual(name = "Infecção",
+                        values = c(covid_color,person_color),
+                        breaks = c(T, F),
+                        labels = c("Covid-19","Não Infectada")) +
+     guides(color  = guide_legend(override.aes = list(shape = shape_guide,
+                                                      fill=c(covid_color,person_color),
+                                                      alpha = 1, size = 5))) +
+    
+     scale_alpha_manual(name = element_blank(),
+                        values = c(1,0),
+                        breaks = c(T,F),
+                        labels = c("Vacina",element_blank())) +
+     guides(alpha  = guide_legend(override.aes = list(color = "black")),
+            nrow=2, byrow=TRUE) +
+    
+     theme_void() + theme(legend.position="bottom")
+    
 })
 ```
 ```{r vacc_non_vacc_covid_sort, echo=FALSE}
@@ -293,56 +386,17 @@ No mundo real, o número de infectados cairia ainda mais com mais vacinas. À me
 ## Código exemplo a partir daqui - apagar ao final
 
 
-TESTE de SLIDER DUPLICADO
-
-```{r synch test, echo=FALSE}
-sliderInput("bins_a", "Number of bins:", min = 1, max = 50, value = 30)
-sliderInput("bins_b", "Number of bins:", min = 1, max = 50, value = 30)
-sliderInput("bins_c", "Number of bins:", min = 1, max = 50, value = 30)
-plotOutput("distPlot")
-```
-
-```{r, context="server"}
-
-observeEvent(input$bins_a,{
-  if(input$bins_a !=input$bins_b)
-    updateSliderInput(inputId = "bins_b", value = input$bins_a)
-  if(input$bins_a !=input$bins_c)
-    updateSliderInput(inputId = "bins_c", value = input$bins_a)
-})
-
-observeEvent(input$bins_b,{
-  if(input$bins_b !=input$bins_a)
-    updateSliderInput(inputId = "bins_a", value = input$bins_b)
-  if(input$bins_b !=input$bins_c)
-    updateSliderInput(inputId = "bins_c", value = input$bins_b)
-})
-observeEvent(input$bins_c,{
-  if(input$bins_c !=input$bins_a)
-    updateSliderInput(inputId = "bins_a", value = input$bins_c)
-  if(input$bins_c !=input$bins_b)
-    updateSliderInput(inputId = "bins_b", value = input$bins_c)
-})
-
-
-output$distPlot <- renderPlot({
-  x <- faithful[, 2]  # Old Faithful Geyser data
-  bins <- seq(min(x), max(x), length.out = input$bins_a + 1)
-  hist(x, breaks = bins, col = 'darkgray', border = 'white')
-})
-```
-
 *Here's a simple exercise with an empty code chunk provided for entering the answer.*
-  
-  Write the R code required to add two plus two:
-  
-  ```{r two-plus-two, exercise=TRUE}
-  2+2
-  ```
-  
-  ### Exercise with Code
-  
-  *Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
+
+Write the R code required to add two plus two:
+
+```{r two-plus-two, exercise=TRUE}
+2+2
+```
+
+### Exercise with Code
+
+*Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
 
 Now write a function that adds any two numbers and then call it:
 
