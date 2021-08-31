@@ -9,6 +9,7 @@ runtime: shiny_prerendered
 ```{r setup, include=FALSE}
 library(learnr)
 library(tidyverse) #load only needed components?
+library(emojifont)
 source("pop_gen.R")
 knitr::opts_chunk$set(echo = FALSE)
 ```
@@ -79,7 +80,7 @@ output$plot_vacc_non_vacc_covid <- renderPlot({
     library(tidyverse) #load only needed components?
     source("src/pop_gen.R")
     population_size = 1024
-    point_size = 4.5
+    point_size = 2
     
     population_outcome <- function(){
       vacc_per = 50
@@ -104,39 +105,57 @@ output$plot_vacc_non_vacc_covid <- renderPlot({
   
   population_outcome() %>%
     add_neat_x_y() %>%
-    ggplot(aes(x=x_neat, y=y_neat))+  
-    geom_point(aes(
-      shape = vacc, 
-      color = infected,
-      fill = outcome), 
-      size = point_size) +
-    scale_shape_manual(name = "Vacina",
-                       values = c(shape_vacc,shape_n_vacc), 
-                       breaks = c(T,F),
-                       labels = c("Vacinada","Não vacinada")) +
+    mutate(label = ifelse(coin_toss(size = population_size, 
+                                    prob = c(0.5,0.5)),
+                          fontawesome('fa-male'),
+                          fontawesome('fa-female'))) %>%
     
-    scale_fill_manual(name = "Resultado",
-                      values = c(death_color, hosp_color,person_color,person_color), 
-                      breaks = c("death", "hosp","infected", "none"),
-                      labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
+    ggplot(aes(x=x, y=y))+
+    geom_point(shape = 1, alpha = 0, size = 1, aes(color = outcome)) +
+    geom_text(aes(color = outcome,label = label),family = "fontawesome-webfont", 
+              size = 3.5, show.legend = FALSE)+
     
-    scale_color_manual(values = c(covid_color,border_color), 
+    geom_point(shape = 1, aes(alpha = vacc), size = 5, color = "grey") +
+    
+    scale_color_manual(name = "Resultado",
+                       values = c(death_color, hosp_color,covid_color,person_color), 
+                       breaks = c("death", "hosp","infected", "none"),
+                       labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
+    guides(color  = guide_legend(override.aes = list(shape = shape_guide,
+                                                     fill=c(death_color, hosp_color,
+                                                            covid_color,person_color), 
+                                                     alpha = 1, size = 5),
+                                 nrow=2,byrow=TRUE)) +
+
+    scale_alpha_manual(name = element_blank(),
+                       values = c(1,0), 
                        breaks = c(T,F),
-                       labels = c("Infectada", "Não infectada"))+
-    theme_void() + theme(legend.position="bottom") + 
-    # guides(color = guide_legend(override.aes = list(shape = 25, 
-    #                                                 fill = "grey"),
-    #                             nrow=2,byrow=TRUE)) + 
-    guides(color = "none") + 
-    guides(shape = guide_legend(override.aes = list(fill = person_color, 
-                                                    color = border_color),
-                                nrow=2,byrow=TRUE)) +
-    guides(fill  = guide_legend(override.aes = list(shape = shape_guide, 
-                                                    color=c(covid_color,
-                                                            covid_color,
-                                                            covid_color,
-                                                            border_color)),   
-                                nrow=2,byrow=TRUE)) 
+                       labels = c("Vacina",element_blank())) +
+    guides(alpha  = guide_legend(override.aes = list(color = "black")),   
+           nrow=2, byrow=TRUE) +
+    
+    theme_void() + theme(legend.position="bottom")
+    
+    
+    #####scrapbook
+    # geom_text(color = "black",family = "fontawesome-webfont", size = 5, 
+    #           label = fontawesome('fa-shield')  )+
+    # 
+    # scale_color_manual(values = c(covid_color,border_color), 
+    #                    breaks = c(T,F),
+    #                    labels = c("Infectada", "Não infectada"))+
+    # scale_color_manual(values = c(person_color,covid_color), 
+    #                    breaks = c(T,F),
+  #                    labels = c("Vacinada", "Não vacinada"))+
+  #guides(color = "none") + 
+  # scale_shape_manual(name = "Vacina",
+  #                    values = c(shape_vacc,shape_n_vacc), 
+  #                    breaks = c(T,F),
+  #                    labels = c("Vacinada","Não vacinada")) +
+  # guides(shape = guide_legend(override.aes = list(fill = person_color, 
+  #                                                   color = border_color),
+  #                               nrow=2,byrow=TRUE)) +
+  #   
   
 })
 ```
@@ -313,16 +332,16 @@ output$distPlot <- renderPlot({
 ```
 
 *Here's a simple exercise with an empty code chunk provided for entering the answer.*
-
-Write the R code required to add two plus two:
-
-```{r two-plus-two, exercise=TRUE}
-2+2
-```
-
-### Exercise with Code
-
-*Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
+  
+  Write the R code required to add two plus two:
+  
+  ```{r two-plus-two, exercise=TRUE}
+  2+2
+  ```
+  
+  ### Exercise with Code
+  
+  *Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
 
 Now write a function that adds any two numbers and then call it:
 
