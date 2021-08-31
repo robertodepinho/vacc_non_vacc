@@ -79,8 +79,9 @@ output$plot_vacc_non_vacc_covid <- renderPlot({
     ##debug version
     library(tidyverse) #load only needed components?
     source("src/pop_gen.R")
-    population_size = 1024
-    point_size = 2
+    population_size = 784
+    point_size = 5
+    shield_size = 7
     
     population_outcome <- function(){
       vacc_per = 50
@@ -110,12 +111,12 @@ output$plot_vacc_non_vacc_covid <- renderPlot({
                           fontawesome('fa-male'),
                           fontawesome('fa-female'))) %>%
     
-    ggplot(aes(x=x, y=y))+
+    ggplot(aes(x=x_neat, y=y_neat))+
     geom_point(shape = 1, alpha = 0, size = 1, aes(color = outcome)) +
     geom_text(aes(color = outcome,label = label),family = "fontawesome-webfont", 
-              size = 3.5, show.legend = FALSE)+
+              size = point_size, show.legend = FALSE)+
     
-    geom_point(shape = 1, aes(alpha = vacc), size = 5, color = "grey") +
+    geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = "grey") +
     
     scale_color_manual(name = "Resultado",
                        values = c(death_color, hosp_color,covid_color,person_color), 
