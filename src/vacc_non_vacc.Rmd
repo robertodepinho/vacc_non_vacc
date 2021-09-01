@@ -235,7 +235,7 @@ Arrumando direitinho somente as pessoas com covid-19, podemos comparar os grupos
 ```{r plot_covid_only, context="server"}
 output$plot_covid_only <- renderPlot({
   #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
-  #TO-DO:Neat
+  
   
   points_dist = 100/sqrt(population_size) #target mean distance between points
   
@@ -248,15 +248,20 @@ output$plot_covid_only <- renderPlot({
   
   #heights X widths
   #choose column width so that the higher group reaches the top 
-  number_of_cols = max(3,max(vacc_infected_n$n / sqrt(population_size))) # in columns
+  number_of_cols = max(3,max(vacc_infected_n$n / sqrt(nrow(pop_infected)))) # in columns
   col_width_dist = number_of_cols * points_dist
+  points_per_col = round(sqrt(population_size))
   
   pop_infected %>%
+    arrange(desc(vacc), desc(outcome)) %>%
     group_by(vacc) %>%
     mutate( x_bar = runif(n()) * col_width_dist  - vacc*col_width_dist,
             y_bar = runif(n()) * n()/number_of_cols * points_dist) %>%
+    mutate( x_bar_neat = points_dist * 
+              (floor((row_number()-1) / (n()%/%number_of_cols+1)))  - vacc*col_width_dist,
+            y_bar_neat = points_dist * ((row_number()-1) %% (n()%/%number_of_cols+1))) %>%
     ungroup() %>%
-    ggplot(aes(x=x_bar, y=y_bar)) +  
+    ggplot(aes(x=x_bar_neat, y=y_bar_neat)) +  
     geom_point(shape = 1, alpha = 0, size = 1, aes(color = infected)) +
     geom_text(aes(color = infected,label = label),family = "fontawesome-webfont", 
               size = point_size, show.legend = FALSE) +
@@ -292,9 +297,8 @@ No gráfico abaixo, arrumamos agora as pessoas com covid-19 junto daquelas sem c
 <!-- #PLOT PERC NA POP  -->
 ```{r plot_vacc_non_vacc_covid_sort, context="server"}
 output$plot_vacc_non_vacc_covid_sort <- renderPlot({
-  #TO-DO:Gráfico WAFFLE Padronizado
   #TO-DO:GRAFICO de percentual em cada população
-  
+  #TO-DO:NEAT
   get_bar_vacc_inf <- function(n, vacc_per, prob) {
     x_len = vacc_per * sqrt(prob)
     x1 = (vacc_per-x_len)/2
@@ -382,6 +386,10 @@ plotOutput("plot_vacc_non_vacc_covid_sort")
 
 
 No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.  
+
+## Hospitalizações e mortes
+
+
 
 ## Código exemplo a partir daqui - apagar ao final
 

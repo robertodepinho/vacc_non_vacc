@@ -6,16 +6,18 @@ To do list:
 
 - [X] Criar um repositório no github/gitlab
 
-- [ ] Obter parâmetros publicados das vacinas para simulações 
+- [X] Obter parâmetros publicados das vacinas para simulações 
   - [X] a) definir referências 
   - [X] b) fazer calculos 
-  - [ ] c) validar calculos
+  - [X] c) validar calculos
 - [ ] Criar scripts separados para:
-  - [ ] a) Executar as simulações
+  - [X] a) Executar as simulações
   - [ ] b) Como fazer os três (ou mais) gráficos propostos
     - [ ] b.1 casos
-    - [ ] b.2 hospitalizações/ICU?
-    - [ ] b.3 ICU/mortes?
+      - [ ] b.1.1 gráfico 4 com coord. arrumadas
+    - [ ] b.2 hospitalizações
+    - [ ] b.3 Mortes
+    - [ ] b.4 Dashboard geral
   - [ ] c) Montar tutorial com as visualizações e interações desejadas
     - [ ] c.1 criar waffle chart padrão
     - [ ] c.2 separar em páginas

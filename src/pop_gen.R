@@ -93,7 +93,7 @@ add_outcomes <- function(population, vacc_per){
   )
 }
 
-#add arrange neatly
+#add neat coords
 add_neat_x_y <- function(population, vacc_per){
   population_size = nrow(population)
   points_dist = 100/sqrt(population_size) 
@@ -105,3 +105,4 @@ add_neat_x_y <- function(population, vacc_per){
                   y_neat = points_dist * ((row_number()-1) %% points_per_col))
   )
 }
+
