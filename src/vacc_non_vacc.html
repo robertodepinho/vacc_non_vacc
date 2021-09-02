@@ -119,20 +119,20 @@ $(document).ready(function () {
 <!-- A fazer: marcados com TO-DO -->
 <div id="section-vacina-e-covid-19" class="section level2">
 <h2>Vacina e covid-19</h2>
-<p>Cada elemento no gráfico abaixo representa uma pessoa. Usando o controle, você pode determinar quantas delas estão vacinadas.</p>
+<p>No quadro abaixo temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas.</p>
 <!-- #PLOT VACC X N VACC -->
 <p><div id="plot_vacc_non_vacc" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_a-label" for="vacc_per_a">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_a" data-skin="shiny" data-min="0" data-max="100" data-from="27" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
-<!-- #TO-DO:Texto explicando que mesmo com vacina pode covid -->
-<p>Todas essas pessoas foram expostas ao vírus um tempo suficiente para que que uma pessoa não vacinada infecte-se. No gráfico abaixo, as pessoas com covid-19 estão marcadas XYZ.</p>
-<p>Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. O espaço das pessoas não vacinadas está bem mais cheio de infectados. No entanto, também vemos casos entre as vacinadas.</p>
+<!-- #Texto explicando que mesmo com vacina pode covid -->
+<p>Todas essas pessoas foram expostas ao vírus por um bom tempo. Tempo suficiente para que que uma pessoa não vacinada seja infectada. No gráfico abaixo, as pessoas com covid-19 estão em vermelho.</p>
+<p>Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. Mas, ainda assim, também vemos casos entre as vacinadas.</p>
 <!-- #PLOT VACC X N VACC X COVID -->
 <p><div id="plot_vacc_non_vacc_covid" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <!-- #TO-DO:Texto Introdução gráfico só com os doentes -->
-<p>Arrumando direitinho somente as pessoas com covid-19, podemos comparar os grupos do vacinados e o grupo dos vacinados. Experimente mover o controle. É possível que a maior parte das pessoas com covid-19 tenha sido vacinada? E 100%? Quando isso acontece?</p>
+<p>Arrumando direitinho as pessoas com covid-19, podemos comparar o números das vacinadas e o não vacinadas entre elas. Experimente mover o controle. É possível que a maior parte das pessoas infectadas tenha sido vacinada? E 100%? Quando isso acontece?</p>
 <!-- #PLOT COVID BAR -->
 <p><div id="plot_covid_only" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <div class="form-group shiny-input-container">
@@ -213,6 +213,8 @@ library(learnr)
 library(tidyverse) #load only needed components?
 library(emojifont)
 source("pop_gen.R")
+
+
 knitr::opts_chunk$set(echo = FALSE)
 </script>
  
@@ -227,20 +229,22 @@ session$onSessionEnded(function() {
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
+source("pop_plots.R")
 
-population_size = 784
+
+population_size <<- 784
 
 #viz parameters
-point_size = 5   #glyph size
-shield_size = 7
+point_size <<- 5   #glyph size
+shield_size <<- 7
 
-shape_guide = 22
+shape_guide <<- 22
 
-person_color = "grey"
-death_color = "black"
-hosp_color = "green"
-covid_color = "red"
-shield_color = "black"
+person_color <<- "grey"
+death_color <<- "black"
+hosp_color <<- "green"
+covid_color <<- "red"
+shield_color <<- "black"
 
 
 #slider synch
@@ -254,7 +258,7 @@ observeEvent(input$vacc_per_b,{
     updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b)
 })
 
-#gen population by vacc per
+#generate population by vacc per
 population_outcome <- reactive({
   vacc_per = input$vacc_per_a
   return(get_population(population_size = population_size, 
@@ -270,26 +274,16 @@ population_outcome <- reactive({
   )
 })
 
+#to display pop size as text
+output$population_size_text <- renderText(population_size)
+
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
 output$plot_vacc_non_vacc <- renderPlot({
-  population_outcome() %>% 
-    ggplot(aes(x=x_neat, y=y_neat))+
-    
-    geom_text(aes(label = label),color = person_color, family = "fontawesome-webfont", 
-              size = point_size, show.legend = FALSE)+
-    geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = shield_color) +
-    
-    scale_alpha_manual(name = element_blank(),
-                       values = c(1,0), 
-                       breaks = c(T,F),
-                       labels = c("Vacina",element_blank())) +
-    guides(alpha  = guide_legend(override.aes = list(color = "black")),   
-           nrow=2, byrow=TRUE) +
-    
-    theme_void() + theme(legend.position="bottom")
-  
+ 
+   population_outcome() %>% 
+    plot_vacc_non_vacc()
   
 })
 </script>
@@ -298,92 +292,8 @@ output$plot_vacc_non_vacc <- renderPlot({
 output$plot_vacc_non_vacc_covid <- renderPlot({
   
   population_outcome() %>% 
-    ggplot(aes(x=x_neat, y=y_neat))+
-    
-    
-    geom_point(shape = 1, alpha = 0, size = 1, aes(color = infected)) +
-    geom_text(aes(color = infected,label = label),family = "fontawesome-webfont",
-              size = point_size, show.legend = FALSE)+
-
-     geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = shield_color) +
-    
-     scale_color_manual(name = "Infecção",
-                        values = c(covid_color,person_color),
-                        breaks = c(T, F),
-                        labels = c("Covid-19","Não Infectada")) +
-     guides(color  = guide_legend(override.aes = list(shape = shape_guide,
-                                                      fill=c(covid_color,person_color),
-                                                      alpha = 1, size = 5))) +
-    
-     scale_alpha_manual(name = element_blank(),
-                        values = c(1,0),
-                        breaks = c(T,F),
-                        labels = c("Vacina",element_blank())) +
-     guides(alpha  = guide_legend(override.aes = list(color = "black")),
-            nrow=2, byrow=TRUE) +
-    
-     theme_void() + theme(legend.position="bottom")
-    
+    plot_vacc_non_vacc_covid()
   
-  #####scrapbook
-  # geom_text(color = "black",family = "fontawesome-webfont", size = 5, 
-  #           label = fontawesome('fa-shield')  )+
-  # 
-  # scale_color_manual(values = c(covid_color,border_color), 
-  #                    breaks = c(T,F),
-  #                    labels = c("Infectada", "Não infectada"))+
-  # scale_color_manual(values = c(person_color,covid_color), 
-  #                    breaks = c(T,F),
-  #                    labels = c("Vacinada", "Não vacinada"))+
-  #guides(color = "none") + 
-  # scale_shape_manual(name = "Vacina",
-  #                    values = c(shape_vacc,shape_n_vacc), 
-  #                    breaks = c(T,F),
-  #                    labels = c("Vacinada","Não vacinada")) +
-  # guides(shape = guide_legend(override.aes = list(fill = person_color, 
-  #                                                   color = border_color),
-  #                               nrow=2,byrow=TRUE)) +
-  #   
-  #shape_vacc = 23
-  #shape_n_vacc = 25
-  #points_dist = 100/sqrt(population_size) #target mean distance between points
-  
-  #pop_infected <- population_outcome() %>%
-  #  filter(infected)
-  #vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
-  #  summarise(n = n())
-  #max_xy_vacc = sqrt(vacc_infected_n$n) * points_dist
-  #print(max_xy_vacc)
-  
-  # chart_completo <- function(){
-  #   population_outcome() %>%
-  #     ggplot(aes(x=x_neat, y=y_neat))+
-  #     geom_point(shape = 1, alpha = 0, size = 1, aes(color = outcome)) +
-  #     geom_text(aes(color = outcome,label = label),family = "fontawesome-webfont", 
-  #               size = point_size, show.legend = FALSE)+
-  #     
-  #     geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = "grey") +
-  #     
-  #     scale_color_manual(name = "Resultado",
-  #                        values = c(death_color, hosp_color,covid_color,person_color), 
-  #                        breaks = c("death", "hosp","infected", "none"),
-  #                        labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
-  #     guides(color  = guide_legend(override.aes = list(shape = shape_guide,
-  #                                                      fill=c(death_color, hosp_color,
-  #                                                             covid_color,person_color), 
-  #                                                      alpha = 1, size = 5),
-  #                                  nrow=2,byrow=TRUE)) +
-  #     
-  #     scale_alpha_manual(name = element_blank(),
-  #                        values = c(1,0), 
-  #                        breaks = c(T,F),
-  #                        labels = c("Vacina",element_blank())) +
-  #     guides(alpha  = guide_legend(override.aes = list(color = "black")),   
-  #            nrow=2, byrow=TRUE) +
-  #     
-  #     theme_void() + theme(legend.position="bottom")
-  #   
-  # }
   
 })
 </script>
@@ -392,54 +302,11 @@ output$plot_vacc_non_vacc_covid <- renderPlot({
 output$plot_covid_only <- renderPlot({
   #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
   
-  
-  points_dist = 100/sqrt(population_size) #target mean distance between points
-  
-  pop_infected <- population_outcome() %>%
-    filter(infected)
-  
-  vacc_infected_n <- pop_infected %>% group_by(vacc) %>%
-    summarise(n = n())
+  population_outcome() %>%
+    filter(infected) %>%
+    plot_covid_only()
   
   
-  #heights X widths
-  #choose column width so that the higher group reaches the top 
-  number_of_cols = max(3,max(vacc_infected_n$n / sqrt(nrow(pop_infected)))) # in columns
-  col_width_dist = number_of_cols * points_dist
-  points_per_col = round(sqrt(population_size))
-  
-  pop_infected %>%
-    arrange(desc(vacc), desc(outcome)) %>%
-    group_by(vacc) %>%
-    mutate( x_bar = runif(n()) * col_width_dist  - vacc*col_width_dist,
-            y_bar = runif(n()) * n()/number_of_cols * points_dist) %>%
-    mutate( x_bar_neat = points_dist * 
-              (floor((row_number()-1) / (n()%/%number_of_cols+1)))  - vacc*col_width_dist,
-            y_bar_neat = points_dist * ((row_number()-1) %% (n()%/%number_of_cols+1))) %>%
-    ungroup() %>%
-    ggplot(aes(x=x_bar_neat, y=y_bar_neat)) +  
-    geom_point(shape = 1, alpha = 0, size = 1, aes(color = infected)) +
-    geom_text(aes(color = infected,label = label),family = "fontawesome-webfont", 
-              size = point_size, show.legend = FALSE) +
-    
-    geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = shield_color) +
-    
-    scale_color_manual(name = "Infecção",
-                       values = c(covid_color,person_color), 
-                       breaks = c(T, F),
-                       labels = c("Covid-19","Não Infectada")) +
-    guides(color  = guide_legend(override.aes = list(shape = shape_guide,
-                                                     fill=covid_color, 
-                                                     alpha = 1, size = 5))) + 
-    
-    scale_alpha_manual(name = element_blank(),
-                       values = c(1,0), 
-                       breaks = c(T,F),
-                       labels = c("Vacina",element_blank())) +
-    guides(alpha  = guide_legend(override.aes = list(color = "black")),   
-           nrow=2, byrow=TRUE) +
-    
-    theme_void() + theme(legend.position="bottom")
   
 })
 </script>
@@ -447,6 +314,38 @@ output$plot_covid_only <- renderPlot({
 <script type="application/shiny-prerendered" data-context="server">
 output$plot_vacc_non_vacc_covid_sort <- renderPlot({
   #TO-DO:GRAFICO de percentual em cada população
+  #TO-DO:NEAT
+  
+  get_bar_vacc_inf_neat <- function(n_inf) {
+    
+    points_dist = 100/sqrt(population_size) 
+    
+    points_per_col = round(sqrt(n_inf)) 
+    
+    row_number = 1:n_inf
+    
+    return(tibble(x_bar = points_dist * (floor((row_number-1) / points_per_col)),
+                  y_bar = points_dist * ((row_number-1) %% points_per_col))
+    )
+    
+    
+  }
+  
+  get_bar_vacc_n_inf_neat <- function(n_inf, n_vacc) {
+    
+    points_dist = 100/sqrt(population_size) 
+    
+    points_per_col = round(sqrt(population_size)) 
+    
+    row_number = 1:(n_vacc-n_inf)
+    
+    return(tibble(x_bar = points_dist * (floor((row_number-1) / points_per_col)),
+                  y_bar = points_dist * ((row_number-1) %% points_per_col))
+    )
+    
+    
+  }
+  
   
   get_bar_vacc_inf <- function(n, vacc_per, prob) {
     x_len = vacc_per * sqrt(prob)
@@ -486,16 +385,22 @@ output$plot_vacc_non_vacc_covid_sort <- renderPlot({
     summarise(n = n())
   
   vacc_per = input$vacc_per_a
-  bar_vacc_inf = get_bar_vacc_inf(n = (summ_pop %>% filter (vacc,infected))$n,
-                                  vacc_per = vacc_per, 
-                                  prob = model[["infected_if_vacc_prob"]]) 
-  bar_vacc_n_inf = get_bar_vacc_n_inf(n = (summ_pop %>% filter (vacc,!infected))$n,
-                                      vacc_per = vacc_per, 
-                                      prob = model[["infected_if_vacc_prob"]]) 
   
+  bar_vacc_inf = get_bar_vacc_inf_neat(n_inf = (summ_pop %>% filter (vacc,infected))$n) 
+  bar_vacc_n_inf = get_bar_vacc_n_inf_neat(n_inf = (summ_pop %>% filter (vacc,infected))$n,
+                                           n_vacc =sum( (summ_pop %>% filter (vacc))$n)) 
+  #NOT NEAT CODE - DO NOT DELETE
+  # bar_vacc_inf = get_bar_vacc_inf(n = (summ_pop %>% filter (vacc,infected))$n,
+  #                                 vacc_per = vacc_per, 
+  #                                 prob = model[["infected_if_vacc_prob"]]) 
+  # 
+  # bar_vacc_n_inf = get_bar_vacc_n_inf(n = (summ_pop %>% filter (vacc,!infected))$n,
+  #                                     vacc_per = vacc_per, 
+  #                                     prob = model[["infected_if_vacc_prob"]]) 
+  # 
   
   population_outcome() %>%
-    mutate(x_bar = x, y_bar = y) %>% 
+    mutate(x_bar = x_neat, y_bar = y_neat) %>% 
     group_by(vacc, infected) %>%
     mutate( x_bar = ifelse(vacc & infected, bar_vacc_inf$x_bar, x_bar),
             y_bar = ifelse(vacc & infected, bar_vacc_inf$y_bar, y_bar)) %>%
@@ -507,26 +412,26 @@ output$plot_vacc_non_vacc_covid_sort <- renderPlot({
     geom_point(shape = 1, alpha = 0, size = 1, aes(color = infected)) +
     geom_text(aes(color = infected,label = label),family = "fontawesome-webfont",
               size = point_size, show.legend = FALSE)+
-
-     geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = shield_color) +
     
-     scale_color_manual(name = "Infecção",
-                        values = c(covid_color,person_color),
-                        breaks = c(T, F),
-                        labels = c("Covid-19","Não Infectada")) +
-     guides(color  = guide_legend(override.aes = list(shape = shape_guide,
-                                                      fill=c(covid_color,person_color),
-                                                      alpha = 1, size = 5))) +
+    geom_point(shape = 1, aes(alpha = vacc), size = shield_size, color = shield_color) +
     
-     scale_alpha_manual(name = element_blank(),
-                        values = c(1,0),
-                        breaks = c(T,F),
-                        labels = c("Vacina",element_blank())) +
-     guides(alpha  = guide_legend(override.aes = list(color = "black")),
-            nrow=2, byrow=TRUE) +
+    scale_color_manual(name = "Infecção",
+                       values = c(covid_color,person_color),
+                       breaks = c(T, F),
+                       labels = c("Covid-19","Não Infectada")) +
+    guides(color  = guide_legend(override.aes = list(shape = shape_guide,
+                                                     fill=c(covid_color,person_color),
+                                                     alpha = 1, size = 5))) +
     
-     theme_void() + theme(legend.position="bottom")
+    scale_alpha_manual(name = element_blank(),
+                       values = c(1,0),
+                       breaks = c(T,F),
+                       labels = c("Vacina",element_blank())) +
+    guides(alpha  = guide_legend(override.aes = list(color = "black")),
+           nrow=2, byrow=TRUE) +
     
+    theme_void() + theme(legend.position="bottom")
+  
 })
 </script>
  
@@ -552,11 +457,11 @@ output$`tutorial-exercise-print-limit-output` <- renderUI({
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::question_prerendered_chunk(structure(list(type = "learnr_radio", label = "quiz-1", question = structure("Which package contains functions for installing other R packages?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_5ff6eb4",     option = "base", value = "base", label = structure("base", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_932fa82",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_963ee8f",     option = "utils", value = "utils", label = structure("utils", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_dbea6c7",     option = "codetools", value = "codetools", label = structure("codetools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-1-answer", question = "quiz-1"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich package contains functions for installing other R packages?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 916109353.573403, options = list()), class = c("learnr_radio", "tutorial_question")))
+learnr:::question_prerendered_chunk(structure(list(type = "learnr_radio", label = "quiz-1", question = structure("Which package contains functions for installing other R packages?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_a8dd222",     option = "base", value = "base", label = structure("base", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_90f2aa0",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_b82016a",     option = "utils", value = "utils", label = structure("utils", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_f24301b",     option = "codetools", value = "codetools", label = structure("codetools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-1-answer", question = "quiz-1"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich package contains functions for installing other R packages?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 2106119260.51926, options = list()), class = c("learnr_radio", "tutorial_question")))
 </script>
  
 <script type="application/shiny-prerendered" data-context="server">
-learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", label = "quiz-2", question = structure("Which of the R packages listed below are used to create plots?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_7d75f7e",     option = "lattice", value = "lattice", label = structure("lattice", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_110880",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_71a4b9d",     option = "stats", value = "stats", label = structure("stats", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_6ab0e40",     option = "grid", value = "grid", label = structure("grid", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-2-answer", question = "quiz-2"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich of the R packages listed below are used to create plots?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 260619515.37864, options = list()), class = c("learnr_checkbox", "tutorial_question")))
+learnr:::question_prerendered_chunk(structure(list(type = "learnr_checkbox", label = "quiz-2", question = structure("Which of the R packages listed below are used to create plots?", html = TRUE, class = c("html", "character")), answers = list(structure(list(id = "lnr_ans_91facff",     option = "lattice", value = "lattice", label = structure("lattice", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_95ef3ef",     option = "tools", value = "tools", label = structure("tools", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_da4bbf4",     option = "stats", value = "stats", label = structure("stats", html = TRUE, class = c("html",     "character")), correct = FALSE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer")), structure(list(id = "lnr_ans_59f5214",     option = "grid", value = "grid", label = structure("grid", html = TRUE, class = c("html",     "character")), correct = TRUE, message = NULL), class = c("tutorial_question_answer", "tutorial_quiz_answer"))), button_labels = list(submit = structure("Submit Answer", html = TRUE, class = c("html", "character")), try_again = structure("Try Again", html = TRUE, class = c("html", "character"))), messages = list(correct = structure("Correct!", html = TRUE, class = c("html", "character")), try_again = structure("Incorrect", html = TRUE, class = c("html", "character")), incorrect = structure("Incorrect", html = TRUE, class = c("html", "character")), message = NULL, post_message = NULL), ids = list(    answer = "quiz-2-answer", question = "quiz-2"), loading = structure("<strong>Loading:<\u002fstrong> \nWhich of the R packages listed below are used to create plots?\n<br/><br/><br/>", html = TRUE, class = c("html", "character")), random_answer_order = FALSE, allow_retry = FALSE,     seed = 1486329113.80787, options = list()), class = c("learnr_checkbox", "tutorial_question")))
 </script>
  <!--html_preserve-->
 <script type="application/shiny-prerendered" data-context="dependencies">
