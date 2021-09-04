@@ -1,0 +1,148 @@
+
+```{r server_init_parameters, context="server"}
+source("pop_plots.R")
+
+population_size <<- 784
+
+#viz parameters
+point_size <<- 5   #glyph size
+shield_size <<- 7
+
+shape_guide <<- 22
+
+person_color <<- "grey"
+death_color <<- "black"
+hosp_color <<- "green"
+covid_color <<- "red"
+shield_color <<- "black"
+
+
+#slider synch
+observeEvent(input$vacc_per_a,{
+  if(input$vacc_per_a !=input$vacc_per_b)
+    updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_a)
+  if(input$vacc_per_a !=input$vacc_per_c)
+    updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_a)
+})
+
+observeEvent(input$vacc_per_b,{
+  if(input$vacc_per_b !=input$vacc_per_a)
+    updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b)
+  if(input$vacc_per_b !=input$vacc_per_c)
+    updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_b)
+})
+
+observeEvent(input$vacc_per_c,{
+  if(input$vacc_per_c !=input$vacc_per_a)
+    updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_c)
+  if(input$vacc_per_c !=input$vacc_per_b)
+    updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_c)
+})
+
+
+#generate population by vacc per
+population_outcome <- reactive({
+  vacc_per = input$vacc_per_a
+  return(get_population(population_size = population_size, 
+                        infected_if_vacc_prob = 
+                          get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+           add_outcomes(vacc_per) %>%
+           add_neat_x_y() %>%
+           mutate(label = ifelse(coin_toss(size = population_size, 
+                                           prob = c(0.5,0.5)),
+                                 fontawesome('fa-male'),
+                                 fontawesome('fa-female')))
+         
+  )
+})
+
+#to display pop size as text
+output$population_size_text <- renderText(population_size)
+
+```
+
+<!-- #PLOT VACC X N VACC -->
+```{r plot_vacc_non_vacc, context="server"}
+output$plot_vacc_non_vacc <- renderPlot({
+  
+  population_outcome() %>% 
+    plot_vacc_non_vacc()
+  
+})
+```
+
+<!-- #PLOT VACC X N VACC X COVID -->
+```{r plot_vacc_non_vacc_covid, context="server"}
+output$plot_vacc_non_vacc_covid <- renderPlot({
+  
+  population_outcome() %>% 
+    plot_vacc_non_vacc_covid()
+  
+  
+})
+```
+
+<!-- #PLOT COVID BAR -->
+```{r plot_covid_only, context="server"}
+output$plot_covid_only <- renderPlot({
+  #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
+  
+  population_outcome() %>%
+    plot_covid_only_waffle()
+  
+})
+```
+
+<!-- #PLOT PERC NA POP  -->
+```{r plot_vacc_non_vacc_covid_sort, context="server"}
+output$plot_vacc_non_vacc_covid_sort <- renderPlot({
+  #TO-DO:GRAFICO de percentual em cada população
+  #TO-DO:NEAT
+  population_outcome() %>%
+    plot_vacc_non_vacc_covid_sort()
+})
+```
+
+
+<!-- #PLOT HOSP DEATH  -->
+```{r plot_hosp_death, context="server"}
+output$plot_hosp_death <- renderPlot({
+  
+  population_outcome() %>%
+    plot_hosp_death()
+})
+```
+
+<!-- #PLOT HOSP DEATH ONLY  -->
+```{r plot_hosp_death_only, context="server"}
+output$plot_hosp_death_only <- renderPlot({
+  
+  population_outcome() %>%
+    plot_hosp_death_only()
+})
+```
+
+<!-- #PLOT HOSP DEATH ONLY  -->
+```{r plot_hosp_death_sort, context="server"}
+output$plot_hosp_death_sort <- renderPlot({
+  
+  population_outcome() %>%
+    plot_hosp_death_sort()
+})
+```
+<!-- #SCORE PLOT  -->
+```{r plot_score, context="server"}
+output$plot_score <- renderPlot({
+  
+  population_outcome() %>%
+    plot_score()
+})
+```
+<!-- #SCORE PLOT  -->
+```{r plot_score_final, context="server"}
+output$plot_score_final <- renderPlot({
+  
+  population_outcome() %>%
+    plot_score()
+})
+```

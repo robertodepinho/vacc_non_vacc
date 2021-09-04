@@ -52,37 +52,47 @@ plot_vacc_non_vacc_covid  <- function(data){
 
 #03 - PLOT VACC X N VACC X COVID ONLY WAFFLE
 plot_covid_only_waffle <- function(data){
-  return(data %>%
-           filter(infected) %>%    #plot_covid_only()
-           mutate(label_vacc = ifelse(vacc, emoji('white_circle'),"")) %>%
-           mutate(vacc = factor(vacc, 
-                                levels = c(T,F), 
-                                labels = c("Vacinada","Não vacinada"))) %>%
-           select(vacc, label, label_vacc, infected) %>%
-           group_by(vacc, label, label_vacc,infected) %>%
-           summarise(n = n()) %>%
-           ggplot(aes( values = n))  +
-           geom_pictogram(aes(label = label, color = infected),
-                          n_rows = 20, size = 4, flip = TRUE,
-                          family = "fontawesome-webfont", show.legend = F) +
-           geom_pictogram(aes(label = " ", color = infected),
-                          n_rows = 20, size = 4, flip = TRUE,
-                          family = "sans") + #dummy empty pictogram for legend
-           geom_pictogram(color = shield_color, fill = "red",
-                          aes(label = label_vacc ),
-                          n_rows = 20, size = 7, flip = TRUE,
-                          family = "EmojiOne", show.legend = F) + 
-           
-           coord_equal() +
-           theme_enhance_waffle() +
-           facet_wrap(~vacc) +
-           scale_color_manual(name = "Infecção",
-                              values = c(covid_color,person_color),
-                              breaks = c(T, F),
-                              labels = c("Covid-19","Não Infectada")) +
-           guides(color  = guide_legend( override.aes = list(size = 10, label = "■")))+
-           theme_void() + theme(legend.key = element_blank(), legend.position="bottom")
-  )}
+  
+  summ_vacc <- data %>%
+    filter(infected) %>%  
+    group_by(vacc)%>%
+    summarise(n = n()) %>%
+    mutate( per = round(n / sum(n) * 100))
+  
+  
+  data %>%
+    filter(infected) %>%    #plot_covid_only()
+    mutate(label_vacc = ifelse(vacc, emoji('white_circle'),"")) %>%
+    mutate(vacc = factor(vacc, 
+                         levels = c(T,F), 
+                         labels = c(paste("Vacinada", (summ_vacc %>% filter(vacc))$per,"%"),
+                                    paste("Não vacinada", (summ_vacc %>% filter(!vacc))$per,"%")))) %>%
+    select(vacc, label, label_vacc, infected) %>%
+    group_by(vacc, label, label_vacc,infected) %>%
+    summarise(n = n()) %>%
+    ggplot()  +
+    geom_pictogram(aes(values = n, label = label, color = infected),
+                   n_rows = 20, size = 4, flip = TRUE,
+                   family = "fontawesome-webfont", show.legend = F) +
+    geom_pictogram(aes(values = n, label = " ", color = infected),
+                   n_rows = 20, size = 4, flip = TRUE,
+                   family = "sans") + #dummy empty pictogram for legend
+    geom_pictogram(color = shield_color, fill = "red",
+                   aes(values = n, label = label_vacc ),
+                   n_rows = 20, size = 7, flip = TRUE,
+                   family = "EmojiOne", show.legend = F) + 
+    
+    coord_equal() +
+    theme_enhance_waffle() +
+    facet_wrap(~vacc) +
+    scale_color_manual(name = "Infecção",
+                       values = c(covid_color,person_color),
+                       breaks = c(T, F),
+                       labels = c("Covid-19","Não Infectada")) +
+    guides(color  = guide_legend( override.aes = list(size = 10, label = "■")))+
+    theme_void() + theme(legend.key = element_blank(), legend.position="bottom") 
+  
+}
 
 
 #04 - PLOT VACC X N VACC X COVID WAFFLE
@@ -155,12 +165,20 @@ plot_hosp_death  <- function(data){
 
 #06 - PLOT VACC X N VACC X HOSP x DEATH ONLY
 plot_hosp_death_only <- function(data){
+  
+  summ_vacc <- data %>%
+    filter(hosp | death) %>%  
+    group_by(vacc)%>%
+    summarise(n = n()) %>%
+    mutate( per = round(n / sum(n) * 100))
+  
   return(data %>%
            filter(hosp | death) %>%    
            mutate(label_vacc = ifelse(vacc, emoji('white_circle'),"")) %>%
            mutate(vacc = factor(vacc, 
                                 levels = c(T,F), 
-                                labels = c("Vacinada","Não vacinada"))) %>%
+                                labels = c(paste("Vacinada", (summ_vacc %>% filter(vacc))$per,"%"),
+                                           paste("Não vacinada", (summ_vacc %>% filter(!vacc))$per,"%")))) %>%
            select(vacc, label, label_vacc, outcome) %>%
            group_by(vacc, outcome, label, label_vacc) %>%
            summarise(n = n()) %>%
@@ -187,3 +205,79 @@ plot_hosp_death_only <- function(data){
            guides(color  = guide_legend( override.aes = list(size = 10, label = "■")))+
            theme_void() + theme(legend.key = element_blank(), legend.position="bottom")
   )}
+
+#07 - PLOT VACC X N VACC X HOSP x DEATH SORT
+plot_hosp_death_sort <- function(data){
+  (data %>%
+     mutate(label_vacc = ifelse(vacc, emoji('white_circle'),"")) %>%
+     mutate(vacc = factor(vacc, 
+                          levels = c(T,F), 
+                          labels = c("Vacinada","Não vacinada"))) %>%
+     select(vacc, label, label_vacc, outcome) %>%
+     group_by(vacc, outcome, label, label_vacc) %>%
+     summarise(n = n()) %>%
+     ggplot(aes( values = n))  +
+     geom_pictogram(aes(label = label, color = outcome),
+                    n_rows = 20, size = 4, flip = TRUE,
+                    family = "fontawesome-webfont", show.legend = F) +
+     geom_pictogram(aes(label = " ", color = outcome),
+                    n_rows = 20, size = 4, flip = TRUE,
+                    family = "sans") + #dummy empty pictogram for legend
+     geom_pictogram(color = shield_color, fill = "red",
+                    aes(label = label_vacc ),
+                    n_rows = 20, size = 7, flip = TRUE,
+                    family = "EmojiOne", show.legend = F) + 
+     
+     coord_equal() +
+     theme_enhance_waffle() +
+     facet_wrap(~vacc) +
+     scale_color_manual(name = "Resultado",
+                        values = c(death_color, hosp_color,covid_color,person_color, "white"),
+                        breaks = c("death", "hosp","infected", "none", 'white'),
+                        labels = c("Morte","Hospitalização","Covid-19","Não Infectada","")) +
+     
+     guides(color  = guide_legend( override.aes = list(size = 10, label = "■")))+
+     theme_void() + theme(legend.key = element_blank(), legend.position="bottom")
+   
+  )
+}
+
+plot_score <- function(data) {
+  
+  data %>%
+    group_by(outcome) %>%
+    summarise(n = n()) %>%
+    mutate(x = c(0,0,0,0), y = c(0,0,0,0)) %>%
+    mutate(label_out = factor(outcome, 
+                              levels = c("death", "hosp","infected", "none"),
+                              labels = c("Mortes","Hospitalizações","Covid-19","Livres"))) %>%
+    ggplot() +
+    facet_wrap(~outcome) +
+    geom_rect(aes(xmin=x, ymin=y, 
+                  xmax= x + 30, ymax = y +10, 
+                  fill = outcome))+
+    geom_text(x=15, y=5, show.legend = FALSE,
+               aes(label = paste(label_out,n,sep="\n"), 
+                   color = outcome),
+               size = 8) +
+    
+    theme_void() + theme(legend.position="none", 
+                         strip.background = element_blank(),
+                         strip.text.x = element_blank()) +
+    scale_fill_manual(name = "Resultado",
+                      values = c(death_color, hosp_color,covid_color,person_color),
+                      breaks = c("death", "hosp","infected", "none"),
+                      labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
+    scale_color_manual(name = "Resultado",
+                       values = c("orange", "black","black","black"),
+                       breaks = c("death", "hosp","infected", "none"),
+                       labels = c("Morte","Hospitalização","Covid-19","Não Infectada"))
+  
+  # guides(fill  = guide_legend( override.aes = list(alpha = 1, 
+  #                                                  color = "white", size = 5, 
+  #                                                  shape = shape_guide, 
+  #                                                  fill = c(death_color, hosp_color,
+  #                                                           covid_color,person_color))))
+  # 
+  
+}
