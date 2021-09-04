@@ -1,18 +1,20 @@
 ---
-title: "Por que vemos pessoas vacinadas com covid-19?"
+title: "Por que vemos pessoas vacinadas com covid-19? - EM TESTE"
 output: 
   learnr::tutorial:
     progressive: true
     language: pt
+    theme: cosmo
 runtime: shiny_prerendered
 ---
 
+
 ```{r setup, include=FALSE}
 library(learnr)
-library(tidyverse) #load only needed components?
+library(ggplot2)
+library(plyr)
+library(dplyr)
 library(emojifont)
-library(hrbrthemes)
-library(extrafont)
 library(waffle)
 source("pop_gen.R")
 
@@ -103,11 +105,11 @@ plotOutput("plot_covid_only")
 sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 
-Agora, arrumamos as pessoas com covid-19 junto daquelas sem covid-19. Entre as não vacinadas, todas tem covid. E entre as vacinadas? O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada? 
+Entre as pessoas não vacinadas, todas tem covid. E entre as vacinadas? O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada? 
 
 <!-- #PLOT PERC NA POP  -->
 ```{r vacc_non_vacc_covid_sort, echo=FALSE}
-plotOutput("plot_vacc_non_vacc_covid_sort")
+#plotOutput("plot_vacc_non_vacc_covid_sort")
 plotOutput("plot_score")
 
 ```
@@ -124,21 +126,17 @@ Se já há uma grande redução da infecção com o uso de vacinas, vamos ver o 
 <!-- #PLOT HOSP DEATH  -->
 ```{r hosp_death_control, echo=FALSE}
 plotOutput("plot_hosp_death")
-sliderInput("vacc_per_c", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
+
 ```
 Podemos repetir com hospitalizações e mortes a pergunta que fizemos antes:  É possível que a maior parte das pessoas hospitalizadas ou mortas tenha sido vacinada? E 100% delas? Quando isso acontece? 
 
 Veja no gráfico abaixo.
 <!-- #PLOT HOSP DEATH ONLY  -->
 ```{r hosp_death_only, echo=FALSE}
+sliderInput("vacc_per_c", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 plotOutput("plot_hosp_death_only")
 ```
-Vamos trazer de volta o grupo todo. Vamos observar o quanto representa o total de hospitalizações e mortes entre pessoas vacinadas e não vacinadas. 
-
-<!-- #PLOT HOSP DEATH ONLY  -->
-```{r hosp_death_sort, echo=FALSE}
-plotOutput("plot_hosp_death_sort")
-```
+Mesmo tendo mais pessoas vacinadas, vamos observar os totais: de infeccções, hospitalizações e mortes. O que acontece quando a maior parte da população é vacinada?
 
 <!-- #PLOT HOSP DEATH ONLY  -->
 ```{r final_score, echo=FALSE}
@@ -146,65 +144,37 @@ plotOutput("plot_score_final")
 ```
 
 
-## Código exemplo a partir daqui - apagar ao final
+
+<!-- <!-- #PLOT HOSP DEATH ONLY  --> -->
+<!-- ```{r hosp_death_sort, echo=FALSE} -->
+<!-- plotOutput("plot_hosp_death_sort") -->
+<!-- ``` -->
 
 
-*Here's a simple exercise with an empty code chunk provided for entering the answer.*
 
-Write the R code required to add two plus two:
+## Créditos / Notas
 
-```{r two-plus-two, exercise=TRUE}
-2+2
-```
+* Concepção: [Roberto de Pinho](https://twitter.com/robertodepinho)
 
-### Exercise with Code
+* Desenvolvimento: Roberto de Pinho, [Marília Melo Favalesso](https://github.com/mmfava) & [Tomás Barcellos](https://github.com/tomasbarcellos)
 
-*Here's an exercise with some prepopulated code as well as `exercise.lines = 5` to provide a bit more initial room to work.*
+* Agradecimentos: [Manoel Barral Netto - Fiocruz](https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/)
 
-Now write a function that adds any two numbers and then call it:
+Durante o desenvolvimento, a concepção foi influenciada pelo artigo ["See How Vaccines Can Make the Difference in Delta Variant’s Impact"](https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&smid=tw-nytimes) do The New York Times. A principal influência do artigo foi a ideia de iniciar com uma população que sofreu exposição. 
 
-```{r add-function, exercise=TRUE, exercise.lines = 5}
-add <- function() {
-  
-}
-```
 
-## Topic 2
+### Simulação
 
-### Exercise with Hint
+A simulação da população e resultados foi feita de acordo com os parâmetros do artigo abaixo, em sua versão 2.
 
-*Here's an exercise where the chunk is pre-evaulated via the `exercise.eval` option (so the user can see the default output we'd like them to customize). We also add a "hint" to the correct solution via the chunk immediate below labeled `print-limit-hint`.*
+**Influence of age on the effectiveness and duration of protection in Vaxzevria and CoronaVac vaccines** 
+Thiago Cerqueira-Silva, Vinicius de Araújo Oliveira, Julia Pescarini, Juracy Bertoldo Júnior, Tales Mota Machado, Renzo Flores-Ortiz, Gerson Penna, Maria Yury Ichihara, Jacson Venâncio de Barros, Viviane S. Boaventura, Mauricio L. Barreto, Guilherme Loureiro Werneck, Manoel Barral-Netto
+medRxiv 2021.08.21.21261501; doi: [https://doi.org/10.1101/2021.08.21.21261501](https://doi.org/10.1101/2021.08.21.21261501)
+*This article is a preprint and has not been peer-reviewed. It reports new medical research that has yet to be evaluated and so should not be used to guide clinical practice.*
 
-Modify the following code to limit the number of rows printed to 5:
+Considera-se que todos os indivíduos foram expostos por tempo suficiente para que sejam infectados, caso sem vacina. 
 
-```{r print-limit, exercise=TRUE, exercise.eval=TRUE}
-mtcars
-```
+A partir dos valores da Tabela 1,  são feitos sorteios para marcar cada indivíduo com *Infection*, *Hospitalization*, *ICU admission* e *Death*, considerando o status de vacinado ou não. São considerados apenas os valores para **Vaxzevria/Fiocruz ("*AstraZeneca*")** / **Fully vaccinated (Completamente Vacinados)**.
 
-```{r print-limit-hint}
-head(mtcars)
-```
 
-### Quiz
-
-*You can include any number of single or multiple choice questions as a quiz. Use the `question` function to define a question and the `quiz` function for grouping multiple questions together.*
-
-Some questions to verify that you understand the purposes of various base and recommended R packages:
-
-```{r quiz}
-quiz(
-  question("Which package contains functions for installing other R packages?",
-           answer("base"),
-           answer("tools"),
-           answer("utils", correct = TRUE),
-           answer("codetools")
-  ),
-  question("Which of the R packages listed below are used to create plots?",
-           answer("lattice", correct = TRUE),
-           answer("tools"),
-           answer("stats"),
-           answer("grid", correct = TRUE)
-  )
-)
-```
 
