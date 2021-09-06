@@ -12,8 +12,8 @@ shape_guide <<- 22
 
 person_color <<- "grey"
 death_color <<- "black"
-hosp_color <<- "#58a758" #green"
-covid_color <<- "#bd4242" #"red"
+hosp_color <<- "#58a758" #green
+covid_color <<- "#bd4242" #"red
 shield_color <<- "black"
 
 ival <- reactiveVal(0)

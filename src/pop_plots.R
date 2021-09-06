@@ -35,8 +35,8 @@ plot_vacc_non_vacc_covid  <- function(data){
                        values = c(covid_color,person_color),
                        breaks = c(T, F),
                        labels = c("Covid-19","Não Infectada")) +
-    guides(color  = guide_legend(override.aes = list(shape = shape_guide,
-                                                     fill=c(covid_color,person_color),
+    guides(color  = guide_legend(override.aes = list(shape = 15,
+                                                     #fill=c(covid_color,person_color),
                                                      alpha = 1, size = 5))) +
     
     scale_alpha_manual(name = element_blank(),
@@ -200,7 +200,7 @@ plot_score <- function(data) {
     ggplot(aes(x = factor(x),y = factor(y))) +
     geom_tile(fill = "white") + 
     geom_point(aes(size = n, fill = outcome), shape = 21) + 
-    scale_size(range = c(1, 20)) + 
+    scale_size(range = c(1, 20), limits = c(0,population_size)) + 
     geom_label(aes(label = paste(label_out,n,sep="\n"),
                    fill = outcome),
                color = c("orange", "black","black","black"),
