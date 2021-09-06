@@ -117,7 +117,7 @@ if (window.hljs) {
 <!-- #SCORE PLOT  -->
 <div id="section-vacina-e-covid-19" class="section level2">
 <h2>Vacina e covid-19</h2>
-<p>No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas.</p>
+<p>No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. Os dados são simulados (ver <a href="#section-notas">Notas</a>).</p>
 <!-- #PLOT VACC X N VACC -->
 <p><div id="plot_vacc_non_vacc" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
 <div class="form-group shiny-input-container">
@@ -129,19 +129,19 @@ if (window.hljs) {
 <p>Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. Mas, ainda assim, também vemos casos entre as vacinadas.</p>
 <!-- #PLOT VACC X N VACC X COVID -->
 <p><div id="plot_vacc_non_vacc_covid" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
-<!-- Texto Introdução gráfico só com os doentes -->
-<p>Arrumando direitinho as pessoas com covid-19, podemos comparar o números das vacinadas e o não vacinadas entre elas. Experimente mover o controle. É possível que a maior parte das pessoas infectadas tenha sido vacinada? E 100%? Quando isso acontece?</p>
-<!-- #PLOT COVID BAR -->
-<p><div id="plot_covid_only" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
+<p>O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada?</p>
+<!-- #PLOT PERC NA POP  -->
+<p><div id="plot_score" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_b-label" for="vacc_per_b">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_b" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
-<p>Entre as pessoas não vacinadas, todas tem covid. E entre as vacinadas? O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada?</p>
-<!-- #PLOT PERC NA POP  -->
-<p><div id="plot_score" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <p>No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.</p>
-<p>Pressione o botão abaixo para examinar o que ocorre com hospitalizações no nosso exemplo.</p>
+<!-- Texto Introdução gráfico só com os doentes -->
+<p>Arrumando direitinho as pessoas com covid-19, podemos comparar o números das vacinadas e o não vacinadas entre elas. Experimente mover o controle. É possível que a maior parte das pessoas infectadas tenha sido vacinada? E 100%? Quando isso acontece?</p>
+<!-- #PLOT COVID BAR -->
+<p><div id="plot_covid_only" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
+<p>Pressione avance para o próximo tópico para examinar o que ocorre com hospitalizações no nosso exemplo.</p>
 </div>
 <div id="section-hospitalizações-e-mortes" class="section level2">
 <h2>Hospitalizações e mortes</h2>
@@ -157,13 +157,14 @@ if (window.hljs) {
 <!-- #PLOT HOSP DEATH ONLY  -->
 <p><div id="plot_score_final" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 </div>
-<div id="section-créditos-notas" class="section level2">
+<div id="section-notas" class="section level2">
 <h2>Créditos / Notas</h2>
 <ul>
 <li><p>Concepção: <a href="https://twitter.com/robertodepinho">Roberto de Pinho</a></p></li>
 <li><p>Desenvolvimento: <a href="https://github.com/robertodepinho">Roberto de Pinho</a>, <a href="https://github.com/mmfava">Marília Melo Favalesso</a> &amp; <a href="https://github.com/tomasbarcellos">Tomás Barcellos</a></p></li>
 <li><p>Agradecimentos: <a href="https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/">Manoel Barral Netto - Fiocruz</a></p></li>
 <li><p>Código fonte: <a href="https://github.com/robertodepinho/vacc_non_vacc">vacc_non_vacc</a></p></li>
+<li><p>Versão: 2021-09-06 09:10:14</p></li>
 </ul>
 <p>Durante o desenvolvimento, a concepção foi influenciada pelo artigo <a href="https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&amp;smid=tw-nytimes">“See How Vaccines Can Make the Difference in Delta Variant’s Impact”</a> do The New York Times. A principal influência do artigo foi a ideia de iniciar com uma população que sofreu exposição.</p>
 <div id="section-simulação" class="section level3">

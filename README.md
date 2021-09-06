@@ -16,7 +16,8 @@ To do list:
       - [X] b.1.1 gráfico 4 com coord. arrumadas
     - [X] b.2 hospitalizações
     - [X] b.3 Mortes
-    - [ ] b.4 Dashboard geral
+    - [ ] b.4 treemap
+    - [ ] b.5 Dashboard geral
 
   - [X] c) Montar tutorial com as visualizações e interações desejadas
     - [X] c.1 criar waffle chart padrão
@@ -33,7 +34,8 @@ To do list:
   - [X] b) fontes, cores etc
   - [ ] c) texto / storytelling
   - [ ] d) limpar código / comentar
-  
+  - [ ] e) consertar gráficos para percentual 0%
+   
 
 
 

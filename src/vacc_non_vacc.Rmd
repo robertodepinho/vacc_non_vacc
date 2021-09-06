@@ -72,7 +72,7 @@ debug <- function(){
 
 ## Vacina e covid-19
 
-No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. 
+No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. Os dados são simulados (ver [Notas](#notas)). 
 
 
 
@@ -94,6 +94,16 @@ Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacin
 plotOutput("plot_vacc_non_vacc_covid", width = "100%", height = plot_height)
 ```
 
+O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada? 
+
+<!-- #PLOT PERC NA POP  -->
+```{r vacc_non_vacc_covid_sort, echo=FALSE}
+plotOutput("plot_score")
+sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
+```
+
+No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.  
+
 
 <!-- Texto Introdução gráfico só com os doentes -->
 Arrumando direitinho as pessoas com covid-19, podemos comparar o números das vacinadas e o não vacinadas entre elas.  Experimente mover o controle. É possível que a maior parte das pessoas infectadas tenha sido vacinada? E 100%? Quando isso acontece?   
@@ -101,22 +111,9 @@ Arrumando direitinho as pessoas com covid-19, podemos comparar o números das va
 <!-- #PLOT COVID BAR -->
 ```{r covid_only, echo=FALSE}
 plotOutput("plot_covid_only", width = "100%", height = plot_height)
-sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 
-Entre as pessoas não vacinadas, todas tem covid. E entre as vacinadas? O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada? 
-
-<!-- #PLOT PERC NA POP  -->
-```{r vacc_non_vacc_covid_sort, echo=FALSE}
-#plotOutput("plot_vacc_non_vacc_covid_sort")
-plotOutput("plot_score")
-
-```
-
-
-No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.  
-
-Pressione o botão abaixo para examinar o que ocorre com hospitalizações no nosso exemplo. 
+Pressione avance para o próximo tópico para examinar o que ocorre com hospitalizações no nosso exemplo. 
 
 ## Hospitalizações e mortes
 
@@ -142,7 +139,7 @@ Mesmo tendo mais pessoas vacinadas, vamos observar os totais: de infeccções, h
 plotOutput("plot_score_final")
 ```
 
-## Créditos / Notas
+## Créditos / Notas {#notas}
 
 * Concepção: [Roberto de Pinho](https://twitter.com/robertodepinho)
 
@@ -151,6 +148,8 @@ plotOutput("plot_score_final")
 * Agradecimentos: [Manoel Barral Netto - Fiocruz](https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/)
 
 * Código fonte: [vacc_non_vacc](https://github.com/robertodepinho/vacc_non_vacc)
+
+* Versão:  `r format(file.info("vacc_non_vacc.Rmd")$mtime, "%Y-%m-%d %H:%M:%S")`
 
 Durante o desenvolvimento, a concepção foi influenciada pelo artigo ["See How Vaccines Can Make the Difference in Delta Variant’s Impact"](https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&smid=tw-nytimes) do The New York Times. A principal influência do artigo foi a ideia de iniciar com uma população que sofreu exposição. 
 
