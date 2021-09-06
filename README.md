@@ -25,12 +25,12 @@ To do list:
     - [X] c.4 duplicatas dos sliders
 
 - [ ] Redação dos textos
-  - [ ] a) créditos
+  - [X] a) créditos
   - [ ] b) validar texto
   
 - [ ] Revisão / melhoria
-  - [ ] a) layout geral
-  - [ ] b) fontes, cores etc
+  - [X] a) layout geral
+  - [X] b) fontes, cores etc
   - [ ] c) texto / storytelling
   - [ ] d) limpar código / comentar
   

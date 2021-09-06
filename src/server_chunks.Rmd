@@ -5,15 +5,15 @@ source("pop_plots.R")
 population_size <<- 784
 
 #viz parameters
-point_size <<- 5   #glyph size
-shield_size <<- 7
+point_size <<- 4   #glyph size - person
+shield_size <<- 6  #glyph size - circle
 
 shape_guide <<- 22
 
 person_color <<- "grey"
 death_color <<- "black"
-hosp_color <<- "green"
-covid_color <<- "red"
+hosp_color <<- "#58a758" #green"
+covid_color <<- "#bd4242" #"red"
 shield_color <<- "black"
 
 
