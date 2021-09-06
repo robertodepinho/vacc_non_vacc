@@ -116,10 +116,9 @@ plot_hosp_death  <- function(data){
                        values = c(death_color, hosp_color,covid_color,person_color),
                        breaks = c("death", "hosp","infected", "none"),
                        labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
-    guides(color  = guide_legend(override.aes = 
-                                   list(shape = shape_guide,
-                                        fill=c(death_color, hosp_color,
-                                               covid_color,person_color),
+    guides(color  = guide_legend(override.aes =
+                                   list(shape = 15,
+                                        #fill=color, #c(death_color, hosp_color,covid_color,person_color),
                                         alpha = 1, size = 5),
                                  nrow=2,byrow=TRUE)) +
     scale_alpha_manual(name = element_blank(),
@@ -187,32 +186,58 @@ plot_score <- function(data) {
   data %>%
     group_by(outcome) %>%
     summarise(n = n()) %>%
-    mutate(x = c(0,0,0,0), y = c(0,0,0,0)) %>%
+    add_row(outcome = "none", n = 0) %>% #make sure there one row for each outcome
+    add_row(outcome = "death", n = 0) %>% 
+    add_row(outcome = "hosp", n = 0) %>% 
+    add_row(outcome = "infected", n = 0) %>% 
+    group_by(outcome) %>%
+    summarise(n = sum(n)) %>%
+    mutate(x = c(2,2,1,1), 
+           y = c(1,2,1,2)) %>%
     mutate(label_out = factor(outcome, 
                               levels = c("death", "hosp","infected", "none"),
                               labels = c("Mortes","Hospitalizações","Covid-19","Não infectadas"))) %>%
-    ggplot() +
-    facet_wrap(~outcome) +
-    geom_rect(aes(xmin=x, ymin=y, 
-                  xmax= x + 30, ymax = y +10, 
-                  fill = outcome))+
-    geom_text(x=15, y=5, show.legend = FALSE,
-               aes(label = paste(label_out,n,sep="\n"), 
-                   color = outcome),
-               size = 8) +
-    
-    theme_void() + theme(legend.position="none", 
-                         strip.background = element_blank(),
-                         strip.text.x = element_blank()) +
+    ggplot(aes(x = factor(x),y = factor(y))) +
+    geom_tile(fill = "white") + 
+    geom_point(aes(size = n, fill = outcome), shape = 21) + 
+    scale_size(range = c(1, 20)) + 
+    geom_label(aes(label = paste(label_out,n,sep="\n"),
+                   fill = outcome),
+               color = c("orange", "black","black","black"),
+               nudge_y = 0.4,
+               size = 8) + 
     scale_fill_manual(name = "Resultado",
-                      values = c(death_color, hosp_color,covid_color,person_color),
-                      breaks = c("death", "hosp","infected", "none"),
-                      labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
-    scale_color_manual(name = "Resultado",
-                       values = c("orange", "black","black","black"),
+                       values = c(death_color, hosp_color,covid_color,person_color),
                        breaks = c("death", "hosp","infected", "none"),
-                       labels = c("Morte","Hospitalização","Covid-19","Não Infectada"))
+                       labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) + 
+    theme_void() + theme(legend.position="none") 
   
-   
+  
+  # facet_wrap(~outcome) +
+  #   geom_point(x=10,y= 10, aes(size = n)) +
+  #   scale_size_continuous(limits = c(0, population_size), 
+  #                         range=c(0,80))
+  # 
+  # geom_rect(aes(xmin=x, ymin=y, 
+  #               xmax= x + 30, ymax = y +10, 
+  #               fill = outcome))+
+  #   geom_text(x=15, y=5, show.legend = FALSE,
+  #             aes(label = paste(label_out,n,sep="\n"), 
+  #                 color = outcome),
+  #             size = 8) +
+  #   
+  #   theme_void() + theme(legend.position="none", 
+  #                        strip.background = element_blank(),
+  #                        strip.text.x = element_blank()) +
+  #   scale_fill_manual(name = "Resultado",
+  #                     values = c(death_color, hosp_color,covid_color,person_color),
+  #                     breaks = c("death", "hosp","infected", "none"),
+  #                     labels = c("Morte","Hospitalização","Covid-19","Não Infectada")) +
+  #   scale_color_manual(name = "Resultado",
+  #                      values = c("orange", "black","black","black"),
+  #                      breaks = c("death", "hosp","infected", "none"),
+  #                      labels = c("Morte","Hospitalização","Covid-19","Não Infectada"))
+  # 
+  # 
   
 }

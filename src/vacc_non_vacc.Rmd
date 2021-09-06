@@ -47,7 +47,7 @@ debug <- function(){
   
   
   population_outcome <- function(){
-    vacc_per = 50
+    vacc_per = 0
     return(get_population(population_size = population_size,
                           infected_if_vacc_prob =
                             get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
