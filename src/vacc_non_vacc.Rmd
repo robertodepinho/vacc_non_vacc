@@ -72,7 +72,7 @@ debug <- function(){
 
 ## Vacina e covid-19
 
-No quadro abaixo temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. 
+No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. 
 
 
 
@@ -80,11 +80,12 @@ No quadro abaixo temos quase 800 pessoas. Usando o controle, você pode determin
 ```{r vacc_per_control, echo=FALSE}
 plotOutput("plot_vacc_non_vacc", width = "100%", height = plot_height)
 sliderInput("vacc_per_a", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
+#uiOutput("slider_a")
 ```
 
 
 <!-- #Texto explicando que mesmo com vacina pode covid -->
-Todas essas pessoas foram expostas ao vírus por um bom tempo. Tempo suficiente para que que uma pessoa não vacinada seja infectada. No gráfico abaixo, as pessoas com covid-19 estão em vermelho. 
+Todas essas pessoas foram expostas ao vírus por um bom tempo. Tempo suficiente para que uma pessoa não vacinada seja infectada. No gráfico abaixo, as pessoas com covid-19 estão em vermelho. 
 
 Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. Mas, ainda assim,  também vemos casos entre as vacinadas. 
 

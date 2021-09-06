@@ -16,33 +16,61 @@ hosp_color <<- "#58a758" #green"
 covid_color <<- "#bd4242" #"red"
 shield_color <<- "black"
 
+ival <- reactiveVal(0)
 
-#slider synch
+
+# #renderui option
+# observeEvent(input$vacc_per_a,{
+#   ival(input$vacc_per_a)
+# })
+# observeEvent(input$vacc_per_b,{
+#   ival(input$vacc_per_b)
+# })
+# observeEvent(input$vacc_per_c,{
+#   ival(input$vacc_per_c)
+# })
+# 
+# output$slider_a <- renderUI({
+#   newval <- ival()
+#   sliderInput("vacc_per_a", "Percentual vacinado da população:", min = 0, max = 100, value = newval)}
+# )
+# output$slider_b <- renderUI({
+#   newval <- ival()
+#   sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 100, value = newval)}
+# )
+# output$slider_c <- renderUI({
+#   newval <- ival()
+#   sliderInput("vacc_per_c", "Percentual vacinado da população:", min = 0, max = 100, value = newval)}
+# )
+
+#slider synch - original option
 observeEvent(input$vacc_per_a,{
   if(input$vacc_per_a !=input$vacc_per_b)
-    updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_a)
+    isolate(updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_a))
   if(input$vacc_per_a !=input$vacc_per_c)
-    updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_a)
-})
+    isolate(updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_a))
+  # if(input$vacc_per_a !=ival())
+  #   ival(input$vacc_per_a)
+}, priority = 1)
 
 observeEvent(input$vacc_per_b,{
   if(input$vacc_per_b !=input$vacc_per_a)
-    updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b)
+    isolate(updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b))
   if(input$vacc_per_b !=input$vacc_per_c)
-    updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_b)
-})
+    isolate(updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_b))
+}, priority = 2)
 
 observeEvent(input$vacc_per_c,{
   if(input$vacc_per_c !=input$vacc_per_a)
-    updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_c)
+    isolate(updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_c))
   if(input$vacc_per_c !=input$vacc_per_b)
-    updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_c)
-})
+    isolate(updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_c))
+}, priority = 3)
 
 
 #generate population by vacc per
 population_outcome <- reactive({
-  vacc_per = input$vacc_per_a
+  vacc_per = input$vacc_per_a #ival() #input$vacc_per_a
   return(get_population(population_size = population_size, 
                         infected_if_vacc_prob = 
                           get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%

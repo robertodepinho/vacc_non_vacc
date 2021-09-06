@@ -117,7 +117,7 @@ if (window.hljs) {
 <!-- #SCORE PLOT  -->
 <div id="section-vacina-e-covid-19" class="section level2">
 <h2>Vacina e covid-19</h2>
-<p>No quadro abaixo temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas.</p>
+<p>No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas.</p>
 <!-- #PLOT VACC X N VACC -->
 <p><div id="plot_vacc_non_vacc" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
 <div class="form-group shiny-input-container">
@@ -125,7 +125,7 @@ if (window.hljs) {
 <input class="js-range-slider" id="vacc_per_a" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
 <!-- #Texto explicando que mesmo com vacina pode covid -->
-<p>Todas essas pessoas foram expostas ao vírus por um bom tempo. Tempo suficiente para que que uma pessoa não vacinada seja infectada. No gráfico abaixo, as pessoas com covid-19 estão em vermelho.</p>
+<p>Todas essas pessoas foram expostas ao vírus por um bom tempo. Tempo suficiente para que uma pessoa não vacinada seja infectada. No gráfico abaixo, as pessoas com covid-19 estão em vermelho.</p>
 <p>Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. Mas, ainda assim, também vemos casos entre as vacinadas.</p>
 <!-- #PLOT VACC X N VACC X COVID -->
 <p><div id="plot_vacc_non_vacc_covid" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
@@ -221,33 +221,61 @@ hosp_color <<- "#58a758" #green"
 covid_color <<- "#bd4242" #"red"
 shield_color <<- "black"
 
+ival <- reactiveVal(0)
 
-#slider synch
+
+# #renderui option
+# observeEvent(input$vacc_per_a,{
+#   ival(input$vacc_per_a)
+# })
+# observeEvent(input$vacc_per_b,{
+#   ival(input$vacc_per_b)
+# })
+# observeEvent(input$vacc_per_c,{
+#   ival(input$vacc_per_c)
+# })
+# 
+# output$slider_a <- renderUI({
+#   newval <- ival()
+#   sliderInput("vacc_per_a", "Percentual vacinado da população:", min = 0, max = 100, value = newval)}
+# )
+# output$slider_b <- renderUI({
+#   newval <- ival()
+#   sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 100, value = newval)}
+# )
+# output$slider_c <- renderUI({
+#   newval <- ival()
+#   sliderInput("vacc_per_c", "Percentual vacinado da população:", min = 0, max = 100, value = newval)}
+# )
+
+#slider synch - original option
 observeEvent(input$vacc_per_a,{
   if(input$vacc_per_a !=input$vacc_per_b)
-    updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_a)
+    isolate(updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_a))
   if(input$vacc_per_a !=input$vacc_per_c)
-    updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_a)
-})
+    isolate(updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_a))
+  # if(input$vacc_per_a !=ival())
+  #   ival(input$vacc_per_a)
+}, priority = 1)
 
 observeEvent(input$vacc_per_b,{
   if(input$vacc_per_b !=input$vacc_per_a)
-    updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b)
+    isolate(updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b))
   if(input$vacc_per_b !=input$vacc_per_c)
-    updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_b)
-})
+    isolate(updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_b))
+}, priority = 2)
 
 observeEvent(input$vacc_per_c,{
   if(input$vacc_per_c !=input$vacc_per_a)
-    updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_c)
+    isolate(updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_c))
   if(input$vacc_per_c !=input$vacc_per_b)
-    updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_c)
-})
+    isolate(updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_c))
+}, priority = 3)
 
 
 #generate population by vacc per
 population_outcome <- reactive({
-  vacc_per = input$vacc_per_a
+  vacc_per = input$vacc_per_a #ival() #input$vacc_per_a
   return(get_population(population_size = population_size, 
                         infected_if_vacc_prob = 
                           get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
