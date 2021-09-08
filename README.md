@@ -35,6 +35,7 @@ To do list:
   - [ ] c) texto / storytelling
   - [ ] d) limpar código / comentar
   - [X] e) consertar gráficos para percentual 0%
+  - [ ] f) população vacinada fixa por sessão
    
 
 

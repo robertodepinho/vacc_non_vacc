@@ -95,19 +95,6 @@ shield_color <<- "black"
 #  })
 
 
-population_by_vacc_per <- function(vacc_per) {
-  return(get_population(population_size = population_size, 
-                        infected_if_vacc_prob = 
-                          get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
-           add_outcomes(vacc_per) %>%
-           add_neat_x_y() %>%
-           mutate(label = ifelse(coin_toss(size = population_size, 
-                                           prob = c(0.5,0.5)),
-                                 fontawesome('fa-male'),
-                                 fontawesome('fa-female')))
-         
-  )
-}
 
 #generate population by vacc per
 population_outcome_01 <- reactive({

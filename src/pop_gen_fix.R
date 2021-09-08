@@ -15,13 +15,46 @@ ve <- function(n, n_infected, tot_infected, population_size) {
 
 
 #create initial population
-get_population <- function(population_size,infected_if_vacc_prob) {
+get_population <- function(population_size) {
+  #return existing population if the same size as requested
+  if(exists("pop_global")){
+    if(nrow(pop_global) == population_size)
+      return(pop_global)
+  }
   model = get_infected_2_death_model()
-  return(tibble(x = runif(population_size)*99+1, 
-                y = runif(population_size)*99+1,
-                infected_if_vacc = coin_toss(size = population_size,
-                                             prob = c(model[["infected_if_vacc_prob"]],
-                                                      1-model[["infected_if_vacc_prob"]]))))
+  pop_local <- 
+    tibble(x = runif(population_size)*99+1, 
+           y = runif(population_size)*99+1) %>%
+    
+    mutate(label = ifelse(coin_toss(size = population_size, 
+                                    prob = c(0.5,0.5)),
+                          fontawesome('fa-male'),
+                          fontawesome('fa-female'))) %>%
+    mutate(infected_if_vacc = coin_toss(size = population_size,
+                                        prob = c(model[["infected_if_vacc_prob"]],
+                                                 1-model[["infected_if_vacc_prob"]]))) %>%
+    mutate(hosp_if_vacc_inf = coin_toss(size = population_size,
+                                        prob = c(model[["hosp_if_vacc_prob"]],
+                                                 1-model[["hosp_if_vacc_prob"]]))) %>%
+    mutate(icu_if_vacc_inf = coin_toss(size = population_size,
+                                       prob = c(model[["icu_if_vacc_prob"]],
+                                                1-model[["icu_if_vacc_prob"]]))) %>%
+    mutate(death_if_vacc_inf = coin_toss(size = population_size,
+                                         prob = c(model[["death_if_vacc_prob"]],
+                                                  1-model[["death_if_vacc_prob"]]))) %>%
+    mutate(hosp_if_n_vacc_inf = coin_toss(size = population_size,
+                                          prob = c(model[["hosp_if_infected_prob"]],
+                                                   1-model[["hosp_if_infected_prob"]]))) %>%
+    mutate(icu_if_n_vacc_inf = coin_toss(size = population_size,
+                                         prob = c(model[["icu_if_infected_prob"]],
+                                                  1-model[["icu_if_infected_prob"]]))) %>%
+    mutate(death_if_n_vacc_inf = coin_toss(size = population_size,
+                                           prob = c(model[["death_if_infected_prob"]],
+                                                    1-model[["death_if_infected_prob"]])))
+  
+  
+  pop_global <<- pop_local
+  return(pop_local)
 }
 
 
@@ -57,16 +90,9 @@ get_infected_2_death_model <- function() {
 
 
 population_by_vacc_per <- function(vacc_per) {
-  return(get_population(population_size = population_size, 
-                        infected_if_vacc_prob = 
-                          get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
+  return(get_population(population_size = population_size) %>%
            add_outcomes(vacc_per) %>%
-           add_neat_x_y() %>%
-           mutate(label = ifelse(coin_toss(size = population_size, 
-                                           prob = c(0.5,0.5)),
-                                 fontawesome('fa-male'),
-                                 fontawesome('fa-female')))
-         
+           add_neat_x_y()
   )
 }
 
@@ -80,27 +106,15 @@ add_outcomes <- function(population, vacc_per){
                    infected = (!vacc | infected_if_vacc), #infected if not vaccinated or based on coin toss on VE. 
                    
                    #hosp/icu/death if infected & based on vacc, non vacc respective probability
-                   hosp = infected & ifelse(vacc, 
-                                            coin_toss(size = population_size,
-                                                      prob = c(model[["hosp_if_vacc_prob"]],
-                                                               1-model[["hosp_if_vacc_prob"]])),
-                                            coin_toss(size = population_size,
-                                                      prob = c(model[["hosp_if_infected_prob"]],
-                                                               1-model[["hosp_if_infected_prob"]]))),
-                   icu = infected & ifelse(vacc, 
-                                           coin_toss(size = population_size,
-                                                     prob = c(model[["icu_if_vacc_prob"]],
-                                                              1-model[["icu_if_vacc_prob"]])),
-                                           coin_toss(size = population_size,
-                                                     prob = c(model[["icu_if_infected_prob"]],
-                                                              1-model[["icu_if_infected_prob"]]))),
+                   hosp  = infected & ifelse(vacc, 
+                                             hosp_if_vacc_inf,
+                                             hosp_if_n_vacc_inf),
+                   icu   = infected & ifelse(vacc, 
+                                             icu_if_vacc_inf,
+                                             icu_if_n_vacc_inf),
                    death = infected & ifelse(vacc, 
-                                             coin_toss(size = population_size,
-                                                       prob = c(model[["death_if_vacc_prob"]],
-                                                                1-model[["death_if_vacc_prob"]])),
-                                             coin_toss(size = population_size,
-                                                       prob = c(model[["death_if_infected_prob"]],
-                                                                1-model[["death_if_infected_prob"]])))) %>% 
+                                             death_if_vacc_inf,
+                                             death_if_n_vacc_inf)) %>% 
            mutate( outcome = case_when(death==T ~ "death",
                                        hosp==T ~ "hosp",
                                        infected==T ~ "infected",
@@ -109,7 +123,7 @@ add_outcomes <- function(population, vacc_per){
 }
 
 #add neat coords
-add_neat_x_y <- function(population, vacc_per){
+add_neat_x_y <- function(population){
   population_size = nrow(population)
   points_dist = 100/sqrt(population_size) 
   points_per_col = round(sqrt(population_size))  

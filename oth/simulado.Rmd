@@ -22,14 +22,15 @@ A partir dos valores da Tabela 1 ( https://doi.org/10.1101/2021.08.21.21261501 )
 
 
 ```{r simulado para validar, echo=FALSE}
-source("pop_gen.R")
+library(emojifont)
+source("../src/pop_gen_fix.R")
 population_size = 100000
 
 vacc_per = 50 #para a pop. simulada para a validação, simplificar com 50,50
 
 
 
-population <- get_population(population_size,infected_if_vacc_prob) 
+population <- get_population(population_size) 
 
 #summary for population
 pop_summ <- population %>%

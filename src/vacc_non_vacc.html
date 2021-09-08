@@ -142,15 +142,22 @@ if (window.hljs) {
 </div>
 <p><div id="plot_score" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <p>No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.</p>
+</div>
+<div id="section-fato-curioso" class="section level2">
+<h2>Fato Curioso</h2>
+<div id="section-é-possível-que-a-maior-parte-das-pessoas-infectadas-esteja-vacinada" class="section level3">
+<h3>É possível que a maior parte das pessoas infectadas esteja vacinada?</h3>
 <!-- Texto Introdução gráfico só com os doentes -->
-<p>Arrumando direitinho as pessoas com covid-19, podemos comparar o números das vacinadas e o não vacinadas entre elas. Experimente mover o controle. É possível que a maior parte das pessoas infectadas tenha sido vacinada? E 100%? Quando isso acontece?</p>
+<p>Olhando apenas as pessoas com covid-19, podemos comparar o números das vacinadas e o não vacinadas entre elas. Experimente mover o controle. É possível que a maior parte das pessoas infectadas tenha sido vacinada? E 100%? Quando isso acontece?</p>
 <!-- #PLOT COVID BAR -->
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_04-label" for="vacc_per_04">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_04" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
 <p><div id="plot_covid_only" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
-<p>Pressione avance para o próximo tópico para examinar o que ocorre com hospitalizações no nosso exemplo.</p>
+<p>Não podemos esquecer, no entanto, que o total de pessoas infectadas decresce à medida que aumentamos a vacinação. E do ponto de vista pessoal, você tem muito menos chance de contrair a covid-19, se tiver tomado a vacina.</p>
+<p>Avance para o próximo tópico para examinar o que ocorre com hospitalizações no nosso exemplo.</p>
+</div>
 </div>
 <div id="section-hospitalizações-e-mortes" class="section level2">
 <h2>Hospitalizações e mortes</h2>
@@ -190,7 +197,7 @@ if (window.hljs) {
 <li><p>Desenvolvimento: <a href="https://github.com/robertodepinho">Roberto de Pinho</a>, <a href="https://github.com/mmfava">Marília Melo Favalesso</a> &amp; <a href="https://github.com/tomasbarcellos">Tomás Barcellos</a></p></li>
 <li><p>Agradecimentos: <a href="https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/">Manoel Barral Netto - Fiocruz</a></p></li>
 <li><p>Código fonte: <a href="https://github.com/robertodepinho/vacc_non_vacc">vacc_non_vacc</a></p></li>
-<li><p>Versão: 2021-09-08 05:40:18</p></li>
+<li><p>Versão: 2021-09-08 07:54:52</p></li>
 </ul>
 <p>Durante o desenvolvimento, a concepção foi influenciada pelo artigo <a href="https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&amp;smid=tw-nytimes">“See How Vaccines Can Make the Difference in Delta Variant’s Impact”</a> do The New York Times. A principal influência do artigo foi a ideia de iniciar com uma população que sofreu exposição.</p>
 
@@ -201,7 +208,7 @@ library(plyr)
 library(dplyr)
 library(emojifont)
 library(waffle)
-source("pop_gen.R")
+source("pop_gen_fix.R")
 
 
 knitr::opts_chunk$set(echo = FALSE)
@@ -321,19 +328,6 @@ shield_color <<- "black"
 #  })
 
 
-population_by_vacc_per <- function(vacc_per) {
-  return(get_population(population_size = population_size, 
-                        infected_if_vacc_prob = 
-                          get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
-           add_outcomes(vacc_per) %>%
-           add_neat_x_y() %>%
-           mutate(label = ifelse(coin_toss(size = population_size, 
-                                           prob = c(0.5,0.5)),
-                                 fontawesome('fa-male'),
-                                 fontawesome('fa-female')))
-         
-  )
-}
 
 #generate population by vacc per
 population_outcome_01 <- reactive({

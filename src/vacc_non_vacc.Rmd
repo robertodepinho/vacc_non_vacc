@@ -17,7 +17,7 @@ library(plyr)
 library(dplyr)
 library(emojifont)
 library(waffle)
-source("pop_gen.R")
+source("pop_gen_fix.R")
 
 
 knitr::opts_chunk$set(echo = FALSE)
@@ -75,19 +75,22 @@ plotOutput("plot_score")
 
 No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.  
 
+## Fato Curioso
+
+### É possível que a maior parte das pessoas infectadas esteja vacinada?
 
 <!-- Texto Introdução gráfico só com os doentes -->
-Arrumando direitinho as pessoas com covid-19, podemos comparar o números das vacinadas e o não vacinadas entre elas.  Experimente mover o controle. É possível que a maior parte das pessoas infectadas tenha sido vacinada? E 100%? Quando isso acontece?   
+Olhando apenas as pessoas com covid-19, podemos comparar o números das vacinadas e o não vacinadas entre elas.  Experimente mover o controle. É possível que a maior parte das pessoas infectadas tenha sido vacinada? E 100%? Quando isso acontece?   
 
 <!-- #PLOT COVID BAR -->
 ```{r covid_only, echo=FALSE}
 sliderInput("vacc_per_04", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 plotOutput("plot_covid_only", width = "100%", height = plot_height)
-
-
 ```
 
-Pressione avance para o próximo tópico para examinar o que ocorre com hospitalizações no nosso exemplo. 
+Não podemos esquecer, no entanto, que o total de pessoas infectadas decresce à medida que aumentamos a vacinação. E do ponto de vista pessoal, você tem muito menos chance de contrair a covid-19, se tiver tomado a vacina.   
+
+Avance para o próximo tópico para examinar o que ocorre com hospitalizações no nosso exemplo. 
 
 ## Hospitalizações e mortes
 
