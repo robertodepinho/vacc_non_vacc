@@ -16,10 +16,11 @@ hosp_color <<- "#58a758" #green
 covid_color <<- "#bd4242" #"red
 shield_color <<- "black"
 
-ival <- reactiveVal(0)
 
 
 # #renderui option
+#ival <- reactiveVal(0)
+#
 # observeEvent(input$vacc_per_a,{
 #   ival(input$vacc_per_a)
 # })
@@ -43,34 +44,58 @@ ival <- reactiveVal(0)
 #   sliderInput("vacc_per_c", "Percentual vacinado da população:", min = 0, max = 100, value = newval)}
 # )
 
-#slider synch - original option
-observeEvent(input$vacc_per_a,{
-  if(input$vacc_per_a !=input$vacc_per_b)
-    isolate(updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_a))
-  if(input$vacc_per_a !=input$vacc_per_c)
-    isolate(updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_a))
-  # if(input$vacc_per_a !=ival())
-  #   ival(input$vacc_per_a)
-}, priority = 1)
+# #slider synch - original option
+# observeEvent(input$vacc_per_a,{
+#   if(input$vacc_per_a !=input$vacc_per_b)
+#     isolate(updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_a))
+#   if(input$vacc_per_a !=input$vacc_per_c)
+#     isolate(updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_a))
+#   # if(input$vacc_per_a !=ival())
+#   #   ival(input$vacc_per_a)
+# }, priority = 1)
+# 
+# observeEvent(input$vacc_per_b,{
+#   if(input$vacc_per_b !=input$vacc_per_a)
+#     isolate(updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b))
+#   if(input$vacc_per_b !=input$vacc_per_c)
+#     isolate(updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_b))
+# }, priority = 2)
+# 
+# observeEvent(input$vacc_per_c,{
+#   if(input$vacc_per_c !=input$vacc_per_a)
+#     isolate(updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_c))
+#   if(input$vacc_per_c !=input$vacc_per_b)
+#     isolate(updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_c))
+# }, priority = 3)
 
-observeEvent(input$vacc_per_b,{
-  if(input$vacc_per_b !=input$vacc_per_a)
-    isolate(updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_b))
-  if(input$vacc_per_b !=input$vacc_per_c)
-    isolate(updateSliderInput(inputId = "vacc_per_c", value = input$vacc_per_b))
-}, priority = 2)
 
-observeEvent(input$vacc_per_c,{
-  if(input$vacc_per_c !=input$vacc_per_a)
-    isolate(updateSliderInput(inputId = "vacc_per_a", value = input$vacc_per_c))
-  if(input$vacc_per_c !=input$vacc_per_b)
-    isolate(updateSliderInput(inputId = "vacc_per_b", value = input$vacc_per_c))
-}, priority = 3)
+#each plot a slider option
+# ival <- reactiveVal(0)
+# 
+# observeEvent(input$vacc_per_01,{
+#    ival(input$vacc_per_01)
+#  })
+# observeEvent(input$vacc_per_02,{
+#    ival(input$vacc_per_02)
+#  })
+# observeEvent(input$vacc_per_03,{
+#    ival(input$vacc_per_03)
+#  })
+# observeEvent(input$vacc_per_04,{
+#    ival(input$vacc_per_04)
+#  })
+# observeEvent(input$vacc_per_05,{
+#    ival(input$vacc_per_05)
+#  })
+# observeEvent(input$vacc_per_06,{
+#    ival(input$vacc_per_06)
+#  })
+# observeEvent(input$vacc_per_07,{
+#    ival(input$vacc_per_07)
+#  })
 
 
-#generate population by vacc per
-population_outcome <- reactive({
-  vacc_per = input$vacc_per_a #ival() #input$vacc_per_a
+population_by_vacc_per <- function(vacc_per) {
   return(get_population(population_size = population_size, 
                         infected_if_vacc_prob = 
                           get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
@@ -82,7 +107,20 @@ population_outcome <- reactive({
                                  fontawesome('fa-female')))
          
   )
+}
+
+#generate population by vacc per
+population_outcome_01 <- reactive({
+  #vacc_per = ival() #input$vacc_per_a
+  return(population_by_vacc_per(input$vacc_per_01))
 })
+population_outcome_02 <- reactive({return(population_by_vacc_per(input$vacc_per_02))})
+population_outcome_03 <- reactive({return(population_by_vacc_per(input$vacc_per_03))})
+population_outcome_04 <- reactive({return(population_by_vacc_per(input$vacc_per_04))})
+population_outcome_05 <- reactive({return(population_by_vacc_per(input$vacc_per_05))})
+population_outcome_06 <- reactive({return(population_by_vacc_per(input$vacc_per_06))})
+population_outcome_07 <- reactive({return(population_by_vacc_per(input$vacc_per_07))})
+
 
 #to display pop size as text
 output$population_size_text <- renderText(population_size)
@@ -93,7 +131,7 @@ output$population_size_text <- renderText(population_size)
 ```{r plot_vacc_non_vacc, context="server"}
 output$plot_vacc_non_vacc <- renderPlot({
   
-  population_outcome() %>% 
+  population_outcome_01() %>% 
     plot_vacc_non_vacc()
   
 })
@@ -103,7 +141,8 @@ output$plot_vacc_non_vacc <- renderPlot({
 ```{r plot_vacc_non_vacc_covid, context="server"}
 output$plot_vacc_non_vacc_covid <- renderPlot({
   
-  population_outcome() %>% 
+  
+  population_outcome_02() %>% 
     plot_vacc_non_vacc_covid()
   
   
@@ -115,7 +154,8 @@ output$plot_vacc_non_vacc_covid <- renderPlot({
 output$plot_covid_only <- renderPlot({
   #TO-DO:PERCENTUAIS DO TOTAL EM VALORES
   
-  population_outcome() %>%
+  
+  population_outcome_04() %>%
     plot_covid_only_waffle()
   
 })
@@ -136,7 +176,8 @@ output$plot_vacc_non_vacc_covid_sort <- renderPlot({
 ```{r plot_hosp_death, context="server"}
 output$plot_hosp_death <- renderPlot({
   
-  population_outcome() %>%
+  
+  population_outcome_05() %>%
     plot_hosp_death()
 })
 ```
@@ -145,7 +186,8 @@ output$plot_hosp_death <- renderPlot({
 ```{r plot_hosp_death_only, context="server"}
 output$plot_hosp_death_only <- renderPlot({
   
-  population_outcome() %>%
+  
+  population_outcome_06() %>%
     plot_hosp_death_only()
 })
 ```
@@ -162,7 +204,8 @@ output$plot_hosp_death_sort <- renderPlot({
 ```{r plot_score, context="server"}
 output$plot_score <- renderPlot({
   
-  population_outcome() %>%
+  
+  population_outcome_03() %>%
     plot_score()
 })
 ```
@@ -170,7 +213,8 @@ output$plot_score <- renderPlot({
 ```{r plot_score_final, context="server"}
 output$plot_score_final <- renderPlot({
   
-  population_outcome() %>%
+  
+  population_outcome_07() %>%
     plot_score()
 })
 ```

@@ -30,40 +30,6 @@ vacc_per_init = 31 #initial slider position for percentage of population vaccina
 
 plot_height = "550px"
 
-#DEBUG ONLY - AUX function to run local charts
-debug <- function(){
-  ##debug version
-  population_size = 784
-  point_size = 5
-  shield_size = 7
-  
-  population_size <<- 784
-  
-  #viz parameters
-  point_size <<- 5   #glyph size
-  shield_size <<- 7
-  
-  shape_guide <<- 22
-  
-  
-  
-  population_outcome <- function(){
-    vacc_per = 0
-    return(get_population(population_size = population_size,
-                          infected_if_vacc_prob =
-                            get_infected_2_death_model()[["infected_if_vacc_prob"]]) %>%
-             add_outcomes(vacc_per)   %>%
-             add_neat_x_y() %>%
-             mutate(label = ifelse(coin_toss(size = population_size, 
-                                             prob = c(0.5,0.5)),
-                                   fontawesome('fa-male'),
-                                   fontawesome('fa-female')))
-           
-           
-    )
-  }
-  
-}
 
 ```
 
@@ -82,12 +48,10 @@ No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determi
 <!-- #PLOT VACC X N VACC -->
 ```{r vacc_per_control, echo=FALSE}
 plotOutput("plot_vacc_non_vacc", width = "100%", height = plot_height)
+sliderInput("vacc_per_01", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
-<slider contentEditable>
-```{r slider_a, echo=FALSE}
-sliderInput("vacc_per_a", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
-```
-</slider>
+
+
 
 <!-- #Texto explicando que mesmo com vacina pode covid -->
 Todas essas pessoas foram expostas ao vírus por um bom tempo. Tempo suficiente para que uma pessoa não vacinada seja infectada. No gráfico abaixo, as pessoas com covid-19 estão em vermelho. 
@@ -97,6 +61,7 @@ Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacin
 <!-- #PLOT VACC X N VACC X COVID -->
 ```{r vacc_non_vacc_covid, echo=FALSE}
 plotOutput("plot_vacc_non_vacc_covid", width = "100%", height = plot_height)
+sliderInput("vacc_per_02", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 
 O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada? 
@@ -104,7 +69,7 @@ O que acontece com o total de infectados à medida que aumentamos o percentual d
 <!-- #PLOT PERC NA POP  -->
 ```{r vacc_non_vacc_covid_sort, echo=FALSE}
 plotOutput("plot_score")
-sliderInput("vacc_per_b", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
+sliderInput("vacc_per_03", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 
 No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.  
@@ -116,6 +81,8 @@ Arrumando direitinho as pessoas com covid-19, podemos comparar o números das va
 <!-- #PLOT COVID BAR -->
 ```{r covid_only, echo=FALSE}
 plotOutput("plot_covid_only", width = "100%", height = plot_height)
+sliderInput("vacc_per_04", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
+
 ```
 
 Pressione avance para o próximo tópico para examinar o que ocorre com hospitalizações no nosso exemplo. 
@@ -127,6 +94,7 @@ Se já há uma grande redução da infecção com o uso de vacinas, vamos ver o 
 <!-- #PLOT HOSP DEATH  -->
 ```{r hosp_death_control, echo=FALSE}
 plotOutput("plot_hosp_death", width = "100%", height = plot_height)
+sliderInput("vacc_per_05", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 
 ```
 Podemos repetir com hospitalizações e mortes a pergunta que fizemos antes:  É possível que a maior parte das pessoas hospitalizadas ou mortas tenha sido vacinada? E 100% delas? Quando isso acontece? 
@@ -134,14 +102,16 @@ Podemos repetir com hospitalizações e mortes a pergunta que fizemos antes:  É
 Veja no gráfico abaixo.
 <!-- #PLOT HOSP DEATH ONLY  -->
 ```{r hosp_death_only, echo=FALSE}
-sliderInput("vacc_per_c", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 plotOutput("plot_hosp_death_only", width = "100%", height = plot_height)
+sliderInput("vacc_per_06", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
 ```
 Mesmo tendo mais pessoas vacinadas, vamos observar os totais: de infeccções, hospitalizações e mortes. O que acontece quando a maior parte da população é vacinada?
 
 <!-- #PLOT HOSP DEATH ONLY  -->
 ```{r final_score, echo=FALSE}
 plotOutput("plot_score_final")
+sliderInput("vacc_per_07", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
+
 ```
 
 ## notas {#notas}
