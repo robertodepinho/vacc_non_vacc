@@ -120,60 +120,59 @@ if (window.hljs) {
 <h2>Vacina e covid-19</h2>
 <p>No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. Os dados são simulados (ver <a href="#section-notas">Notas</a>).</p>
 <!-- #PLOT VACC X N VACC -->
-<p><div id="plot_vacc_non_vacc" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_01-label" for="vacc_per_01">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_01" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
+<p><div id="plot_vacc_non_vacc" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
 <!-- #Texto explicando que mesmo com vacina pode covid -->
 <p>Todas essas pessoas foram expostas ao vírus por um bom tempo. Tempo suficiente para que uma pessoa não vacinada seja infectada. No gráfico abaixo, as pessoas com covid-19 estão em vermelho.</p>
 <p>Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. Mas, ainda assim, também vemos casos entre as vacinadas.</p>
 <!-- #PLOT VACC X N VACC X COVID -->
-<p><div id="plot_vacc_non_vacc_covid" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_02-label" for="vacc_per_02">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_02" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
+<p><div id="plot_vacc_non_vacc_covid" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
 <p>O que acontece com o total de infectados à medida que aumentamos o percentual da população vacinada?</p>
 <!-- #PLOT PERC NA POP  -->
-<p><div id="plot_score" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_03-label" for="vacc_per_03">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_03" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
+<p><div id="plot_score" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <p>No mundo real, o número de infectados cairia ainda mais com mais vacinas. À medida que temos menos infectados, fica cada vez mais difícil infectar-se. Para que nosso exemplo funcione, temos que imaginar que elas viajaram para um foco de covid-19.</p>
 <!-- Texto Introdução gráfico só com os doentes -->
 <p>Arrumando direitinho as pessoas com covid-19, podemos comparar o números das vacinadas e o não vacinadas entre elas. Experimente mover o controle. É possível que a maior parte das pessoas infectadas tenha sido vacinada? E 100%? Quando isso acontece?</p>
 <!-- #PLOT COVID BAR -->
-<p><div id="plot_covid_only" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_04-label" for="vacc_per_04">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_04" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
+<p><div id="plot_covid_only" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
 <p>Pressione avance para o próximo tópico para examinar o que ocorre com hospitalizações no nosso exemplo.</p>
 </div>
 <div id="section-hospitalizações-e-mortes" class="section level2">
 <h2>Hospitalizações e mortes</h2>
 <p>Se já há uma grande redução da infecção com o uso de vacinas, vamos ver o que acontece com hospitalizações e mortes.</p>
 <!-- #PLOT HOSP DEATH  -->
-<p><div id="plot_hosp_death" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_05-label" for="vacc_per_05">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_05" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
-<p>Podemos repetir com hospitalizações e mortes a pergunta que fizemos antes: É possível que a maior parte das pessoas hospitalizadas ou mortas tenha sido vacinada? E 100% delas? Quando isso acontece?</p>
-<p>Veja no gráfico abaixo. <!-- #PLOT HOSP DEATH ONLY  --> <div id="plot_hosp_death_only" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
+<p><div id="plot_hosp_death" class="shiny-plot-output" style="width:100%;height:550px;"></div> Podemos repetir com hospitalizações e mortes a pergunta que fizemos antes: É possível que a maior parte das pessoas hospitalizadas ou mortas tenha sido vacinada? E 100% delas? Quando isso acontece?</p>
+<p>Veja no gráfico abaixo. <!-- #PLOT HOSP DEATH ONLY  --></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_06-label" for="vacc_per_06">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_06" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
-<p>Mesmo tendo mais pessoas vacinadas, vamos observar os totais: de infeccções, hospitalizações e mortes. O que acontece quando a maior parte da população é vacinada?</p>
+<p><div id="plot_hosp_death_only" class="shiny-plot-output" style="width:100%;height:550px;"></div> Mesmo tendo mais pessoas vacinadas, vamos observar os totais: de infeccções, hospitalizações e mortes. O que acontece quando a maior parte da população é vacinada?</p>
 <!-- #PLOT HOSP DEATH ONLY  -->
-<p><div id="plot_score_final" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_07-label" for="vacc_per_07">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_07" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
+<p><div id="plot_score_final" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 </div>
 <div id="section-notas" class="section level2">
 <h2>notas</h2>
@@ -191,7 +190,7 @@ if (window.hljs) {
 <li><p>Desenvolvimento: <a href="https://github.com/robertodepinho">Roberto de Pinho</a>, <a href="https://github.com/mmfava">Marília Melo Favalesso</a> &amp; <a href="https://github.com/tomasbarcellos">Tomás Barcellos</a></p></li>
 <li><p>Agradecimentos: <a href="https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/">Manoel Barral Netto - Fiocruz</a></p></li>
 <li><p>Código fonte: <a href="https://github.com/robertodepinho/vacc_non_vacc">vacc_non_vacc</a></p></li>
-<li><p>Versão: 2021-09-08 05:34:25</p></li>
+<li><p>Versão: 2021-09-08 05:40:18</p></li>
 </ul>
 <p>Durante o desenvolvimento, a concepção foi influenciada pelo artigo <a href="https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&amp;smid=tw-nytimes">“See How Vaccines Can Make the Difference in Delta Variant’s Impact”</a> do The New York Times. A principal influência do artigo foi a ideia de iniciar com uma população que sofreu exposição.</p>
 
