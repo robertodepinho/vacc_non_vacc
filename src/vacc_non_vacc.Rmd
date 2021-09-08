@@ -5,6 +5,7 @@ output:
     progressive: true
     language: pt
     theme: cosmo
+    css: css/custom.css
 runtime: shiny_prerendered
 ---
 
@@ -70,19 +71,23 @@ debug <- function(){
 ```
 
 
+
 ## Vacina e covid-19
 
 No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. Os dados são simulados (ver [Notas](#notas)). 
 
 
+ 
 
 <!-- #PLOT VACC X N VACC -->
 ```{r vacc_per_control, echo=FALSE}
 plotOutput("plot_vacc_non_vacc", width = "100%", height = plot_height)
-sliderInput("vacc_per_a", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
-#uiOutput("slider_a")
 ```
-
+<slider contentEditable>
+```{r slider_a, echo=FALSE}
+sliderInput("vacc_per_a", "Percentual vacinado da população:", min = 0, max = 100, value = vacc_per_init)
+```
+</slider>
 
 <!-- #Texto explicando que mesmo com vacina pode covid -->
 Todas essas pessoas foram expostas ao vírus por um bom tempo. Tempo suficiente para que uma pessoa não vacinada seja infectada. No gráfico abaixo, as pessoas com covid-19 estão em vermelho. 
@@ -139,22 +144,9 @@ Mesmo tendo mais pessoas vacinadas, vamos observar os totais: de infeccções, h
 plotOutput("plot_score_final")
 ```
 
-## Créditos / Notas {#notas}
+## notas {#notas}
 
-* Concepção: [Roberto de Pinho](https://twitter.com/robertodepinho)
-
-* Desenvolvimento: [Roberto de Pinho](https://github.com/robertodepinho), [Marília Melo Favalesso](https://github.com/mmfava) & [Tomás Barcellos](https://github.com/tomasbarcellos)
-
-* Agradecimentos: [Manoel Barral Netto - Fiocruz](https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/)
-
-* Código fonte: [vacc_non_vacc](https://github.com/robertodepinho/vacc_non_vacc)
-
-* Versão:  `r format(file.info("vacc_non_vacc.Rmd")$mtime, "%Y-%m-%d %H:%M:%S")`
-
-Durante o desenvolvimento, a concepção foi influenciada pelo artigo ["See How Vaccines Can Make the Difference in Delta Variant’s Impact"](https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&smid=tw-nytimes) do The New York Times. A principal influência do artigo foi a ideia de iniciar com uma população que sofreu exposição. 
-
-
-### Simulação
+#### Simulação
 
 A simulação da população e resultados foi feita de acordo com os parâmetros do artigo abaixo. O artigo está em [preprint](https://pt.wikipedia.org/wiki/Pr%C3%A9-publica%C3%A7%C3%A3o). Foi utilizada a sua versão 2.
 
@@ -168,4 +160,17 @@ Considera-se que todos os indivíduos foram expostos por tempo suficiente para q
 A partir dos valores da Tabela 1,  são feitos sorteios para marcar cada indivíduo com *Infection*, *Hospitalization*, *ICU admission* e *Death*, considerando o status de vacinado ou não. São considerados apenas os valores para **Vaxzevria/Fiocruz ("*AstraZeneca*")** / **Fully vaccinated (Completamente Vacinados)**.
 
 
+#### Créditos
+
+* Concepção: [Roberto de Pinho](https://twitter.com/robertodepinho)
+
+* Desenvolvimento: [Roberto de Pinho](https://github.com/robertodepinho), [Marília Melo Favalesso](https://github.com/mmfava) & [Tomás Barcellos](https://github.com/tomasbarcellos)
+
+* Agradecimentos: [Manoel Barral Netto - Fiocruz](https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/)
+
+* Código fonte: [vacc_non_vacc](https://github.com/robertodepinho/vacc_non_vacc)
+
+* Versão:  `r format(file.info("vacc_non_vacc.Rmd")$mtime, "%Y-%m-%d %H:%M:%S")`
+
+Durante o desenvolvimento, a concepção foi influenciada pelo artigo ["See How Vaccines Can Make the Difference in Delta Variant’s Impact"](https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&smid=tw-nytimes) do The New York Times. A principal influência do artigo foi a ideia de iniciar com uma população que sofreu exposição. 
 

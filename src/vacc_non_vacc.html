@@ -94,6 +94,7 @@ if (window.hljs) {
 
 <!-- HEAD_CONTENT -->
 
+<link rel="stylesheet" href="css/custom.css" type="text/css" />
 
 </head>
 
@@ -119,11 +120,12 @@ if (window.hljs) {
 <h2>Vacina e covid-19</h2>
 <p>No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. Os dados são simulados (ver <a href="#section-notas">Notas</a>).</p>
 <!-- #PLOT VACC X N VACC -->
-<p><div id="plot_vacc_non_vacc" class="shiny-plot-output" style="width:100%;height:550px;"></div></p>
+<p><div id="plot_vacc_non_vacc" class="shiny-plot-output" style="width:100%;height:550px;"></div> <slider contentEditable></p>
 <div class="form-group shiny-input-container">
 <label class="control-label" id="vacc_per_a-label" for="vacc_per_a">Percentual vacinado da população:</label>
 <input class="js-range-slider" id="vacc_per_a" data-skin="shiny" data-min="0" data-max="100" data-from="31" data-step="1" data-grid="true" data-grid-num="10" data-grid-snap="false" data-prettify-separator="," data-prettify-enabled="true" data-keyboard="true" data-data-type="number"/>
 </div>
+<p></slider></p>
 <!-- #Texto explicando que mesmo com vacina pode covid -->
 <p>Todas essas pessoas foram expostas ao vírus por um bom tempo. Tempo suficiente para que uma pessoa não vacinada seja infectada. No gráfico abaixo, as pessoas com covid-19 estão em vermelho.</p>
 <p>Todas as pessoas não vacinadas estão com covid-19. Já a maior parte das vacinadas, escaparam. Mas, ainda assim, também vemos casos entre as vacinadas.</p>
@@ -158,21 +160,24 @@ if (window.hljs) {
 <p><div id="plot_score_final" class="shiny-plot-output" style="width:100%;height:400px;"></div></p>
 </div>
 <div id="section-notas" class="section level2">
-<h2>Créditos / Notas</h2>
+<h2>notas</h2>
+<div id="section-simulação" class="section level4">
+<h4>Simulação</h4>
+<p>A simulação da população e resultados foi feita de acordo com os parâmetros do artigo abaixo. O artigo está em <a href="https://pt.wikipedia.org/wiki/Pr%C3%A9-publica%C3%A7%C3%A3o">preprint</a>. Foi utilizada a sua versão 2.</p>
+<p><strong>Influence of age on the effectiveness and duration of protection in Vaxzevria and CoronaVac vaccines</strong> Thiago Cerqueira-Silva, Vinicius de Araújo Oliveira, Julia Pescarini, Juracy Bertoldo Júnior, Tales Mota Machado, Renzo Flores-Ortiz, Gerson Penna, Maria Yury Ichihara, Jacson Venâncio de Barros, Viviane S. Boaventura, Mauricio L. Barreto, Guilherme Loureiro Werneck, Manoel Barral-Netto medRxiv 2021.08.21.21261501; doi: <a href="https://doi.org/10.1101/2021.08.21.21261501">https://doi.org/10.1101/2021.08.21.21261501</a> <em>This article is a preprint and has not been peer-reviewed. It reports new medical research that has yet to be evaluated and so should not be used to guide clinical practice.</em></p>
+<p>Considera-se que todos os indivíduos foram expostos por tempo suficiente para que sejam infectados, caso sem vacina.</p>
+<p>A partir dos valores da Tabela 1, são feitos sorteios para marcar cada indivíduo com <em>Infection</em>, <em>Hospitalization</em>, <em>ICU admission</em> e <em>Death</em>, considerando o status de vacinado ou não. São considerados apenas os valores para <strong>Vaxzevria/Fiocruz (“<em>AstraZeneca</em>”)</strong> / <strong>Fully vaccinated (Completamente Vacinados)</strong>.</p>
+</div>
+<div id="section-créditos" class="section level4">
+<h4>Créditos</h4>
 <ul>
 <li><p>Concepção: <a href="https://twitter.com/robertodepinho">Roberto de Pinho</a></p></li>
 <li><p>Desenvolvimento: <a href="https://github.com/robertodepinho">Roberto de Pinho</a>, <a href="https://github.com/mmfava">Marília Melo Favalesso</a> &amp; <a href="https://github.com/tomasbarcellos">Tomás Barcellos</a></p></li>
 <li><p>Agradecimentos: <a href="https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/">Manoel Barral Netto - Fiocruz</a></p></li>
 <li><p>Código fonte: <a href="https://github.com/robertodepinho/vacc_non_vacc">vacc_non_vacc</a></p></li>
-<li><p>Versão: 2021-09-06 18:08:01</p></li>
+<li><p>Versão: 2021-09-08 04:29:44</p></li>
 </ul>
 <p>Durante o desenvolvimento, a concepção foi influenciada pelo artigo <a href="https://www.nytimes.com/interactive/2021/08/12/science/covid-delta-breakthrough.html?smtyp=cur&amp;smid=tw-nytimes">“See How Vaccines Can Make the Difference in Delta Variant’s Impact”</a> do The New York Times. A principal influência do artigo foi a ideia de iniciar com uma população que sofreu exposição.</p>
-<div id="section-simulação" class="section level3">
-<h3>Simulação</h3>
-<p>A simulação da população e resultados foi feita de acordo com os parâmetros do artigo abaixo. O artigo está em <a href="https://pt.wikipedia.org/wiki/Pr%C3%A9-publica%C3%A7%C3%A3o">preprint</a>. Foi utilizada a sua versão 2.</p>
-<p><strong>Influence of age on the effectiveness and duration of protection in Vaxzevria and CoronaVac vaccines</strong> Thiago Cerqueira-Silva, Vinicius de Araújo Oliveira, Julia Pescarini, Juracy Bertoldo Júnior, Tales Mota Machado, Renzo Flores-Ortiz, Gerson Penna, Maria Yury Ichihara, Jacson Venâncio de Barros, Viviane S. Boaventura, Mauricio L. Barreto, Guilherme Loureiro Werneck, Manoel Barral-Netto medRxiv 2021.08.21.21261501; doi: <a href="https://doi.org/10.1101/2021.08.21.21261501">https://doi.org/10.1101/2021.08.21.21261501</a> <em>This article is a preprint and has not been peer-reviewed. It reports new medical research that has yet to be evaluated and so should not be used to guide clinical practice.</em></p>
-<p>Considera-se que todos os indivíduos foram expostos por tempo suficiente para que sejam infectados, caso sem vacina.</p>
-<p>A partir dos valores da Tabela 1, são feitos sorteios para marcar cada indivíduo com <em>Infection</em>, <em>Hospitalization</em>, <em>ICU admission</em> e <em>Death</em>, considerando o status de vacinado ou não. São considerados apenas os valores para <strong>Vaxzevria/Fiocruz (“<em>AstraZeneca</em>”)</strong> / <strong>Fully vaccinated (Completamente Vacinados)</strong>.</p>
 
 <script type="application/shiny-prerendered" data-context="server-start">
 library(learnr)

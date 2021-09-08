@@ -34,7 +34,7 @@ To do list:
   - [X] b) fontes, cores etc
   - [ ] c) texto / storytelling
   - [ ] d) limpar código / comentar
-  - [ ] e) consertar gráficos para percentual 0%
+  - [X] e) consertar gráficos para percentual 0%
    
 
 
