@@ -40,7 +40,7 @@ plot_height = "550px"
 
 ## Vacina e covid-19
 
-No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. Os dados são simulados (ver [Notas](#notas)). 
+No quadro abaixo, temos quase 800 pessoas. Usando o controle, você pode determinar quantas delas estão vacinadas. Os dados são simulados (ver [notas](#notas)). 
 
 
  
@@ -126,16 +126,14 @@ plotOutput("plot_score_final")
 
 #### Simulação
 
-A simulação da população e resultados foi feita de acordo com os parâmetros do artigo abaixo. O artigo está em [preprint](https://pt.wikipedia.org/wiki/Pr%C3%A9-publica%C3%A7%C3%A3o). Foi utilizada a sua versão 2.
+A simulação da população e resultados foi feita de acordo com os parâmetros do artigo abaixo. O artigo está em [preprint](https://pt.wikipedia.org/wiki/Pr%C3%A9-publica%C3%A7%C3%A3o). Foi utilizada a sua versão 2. O estudo avaliou a eficácia das vacinas Vaxzevria ("*AstraZeneca*") e CoronaVac para infecção relacionada à COVID-19 em mais de 75 milhões de vacinados brasileiros entre janeiro a julho de 2021.
 
 **Influence of age on the effectiveness and duration of protection in Vaxzevria and CoronaVac vaccines** 
 Thiago Cerqueira-Silva, Vinicius de Araújo Oliveira, Julia Pescarini, Juracy Bertoldo Júnior, Tales Mota Machado, Renzo Flores-Ortiz, Gerson Penna, Maria Yury Ichihara, Jacson Venâncio de Barros, Viviane S. Boaventura, Mauricio L. Barreto, Guilherme Loureiro Werneck, Manoel Barral-Netto
 medRxiv 2021.08.21.21261501; doi: [https://doi.org/10.1101/2021.08.21.21261501](https://doi.org/10.1101/2021.08.21.21261501)
 *This article is a preprint and has not been peer-reviewed. It reports new medical research that has yet to be evaluated and so should not be used to guide clinical practice.*
 
-Considera-se que todos os indivíduos foram expostos por tempo suficiente para que sejam infectados, caso sem vacina. 
-
-A partir dos valores da Tabela 1,  são feitos sorteios para marcar cada indivíduo com *Infection*, *Hospitalization*, *ICU admission* e *Death*, considerando o status de vacinado ou não. São considerados apenas os valores para **Vaxzevria/Fiocruz ("*AstraZeneca*")** / **Fully vaccinated (Completamente Vacinados)**.
+Na simulação, são considerados apenas os valores para **Vaxzevria/Fiocruz ("*AstraZeneca*")** / **Fully vaccinated (Completamente Vacinados)**. Considera-se que todos os indivíduos foram expostos por tempo suficiente para que sejam infectados, caso sem vacina.  A partir dos valores da Tabela 1 do artigo,  são feitos sorteios para marcar cada indivíduo com *Infection*, *Hospitalization*, *ICU admission* e *Death*, considerando o status de vacinado ou não. 
 
 
 #### Créditos
@@ -144,7 +142,7 @@ A partir dos valores da Tabela 1,  são feitos sorteios para marcar cada indiví
 
 * Desenvolvimento: [Roberto de Pinho](https://github.com/robertodepinho), [Marília Melo Favalesso](https://github.com/mmfava) & [Tomás Barcellos](https://github.com/tomasbarcellos)
 
-* Agradecimentos: [Manoel Barral Netto - Fiocruz](https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/)
+* Agradecimentos: [Manoel Barral Netto - Fiocruz](https://cidacs.bahia.fiocruz.br/en/team/manoel-barral-netto-2/), Leonardo Fonseca, Viviane Malheiros, Beto Boullosa. 
 
 * Código fonte: [vacc_non_vacc](https://github.com/robertodepinho/vacc_non_vacc)
 
